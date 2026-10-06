@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { Faq } from '@/components/Faq'
 import { LeadForm } from '@/components/LeadForm'
+import { MarketHeroImage, MarketHeroImageFallback } from '@/components/MarketHeroImage'
 import { Marketplace } from '@/components/Marketplace'
 import { CATEGORIES, formatEuro } from '@/lib/categories'
 import type { FaqItem } from '@/lib/faq'
@@ -38,11 +40,17 @@ const MARKET_FAQ: FaqItem[] = [
 export default async function AngebotePage() {
   const offers = await getAllOffers()
   const minEntry = Math.min(...CATEGORIES.map((c) => c.minInvestment))
+  // Same default as Marketplace: first category (demand order) that has offers
+  const defaultSlug = (CATEGORIES.find((c) => offers.some((o) => o.category_slug === c.slug)) ?? CATEGORIES[0]).slug
 
   return (
     <>
-      <section className="bg-slate-900">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <section className="relative bg-slate-900">
+        {/* Photo of the selected category under a ~85 % navy overlay, like the home hero */}
+        <Suspense fallback={<MarketHeroImageFallback defaultSlug={defaultSlug} />}>
+          <MarketHeroImage defaultSlug={defaultSlug} />
+        </Suspense>
+        <div className="relative mx-auto max-w-6xl px-4 py-8 sm:py-10">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / Angebote
           </nav>

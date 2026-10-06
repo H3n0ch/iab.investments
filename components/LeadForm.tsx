@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { startTransition, useActionState, useEffect, useRef, useState } from 'react'
 import { submitLead, type LeadFormState } from '@/lib/actions/leads'
 import { CATEGORIES } from '@/lib/categories'
@@ -30,6 +31,7 @@ const input =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
 
 export function LeadForm({ preselected, options, source, amount, year, goal, offerId, submitLabel, compact = false, partner, defaults }: Props) {
+  const router = useRouter()
   const [state, action, pending] = useActionState<LeadFormState, FormData>(submitLead, null)
   const [selected, setSelected] = useState<string[]>(preselected)
   const tRef = useRef<HTMLInputElement>(null)
@@ -43,13 +45,18 @@ export function LeadForm({ preselected, options, source, amount, year, goal, off
     if (utmRef.current) utmRef.current.value = partner ? `partner:${partner}` : (new URLSearchParams(window.location.search).get('utm_source') ?? '')
   }, [partner])
 
+  // The inquiry unlocks all offer details (cookie) – refresh so listings and offer pages show them
+  useEffect(() => {
+    if (state?.ok) router.refresh()
+  }, [state, router])
+
   if (state?.ok) {
     return (
       <div className="animate-fade-up rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-2xl text-white">✓</div>
         <p className="mt-3 text-lg font-bold text-slate-900">Anfrage gesendet</p>
         <p className="mt-1 text-sm text-slate-600">
-          Passende Anbieter melden sich in Kürze telefonisch bei Ihnen. Eine Bestätigung ist per E-Mail unterwegs.
+          Passende Anbieter melden sich in Kürze telefonisch bei Ihnen. Alle Angebotsdetails sind jetzt für Sie freigeschaltet.
         </p>
       </div>
     )

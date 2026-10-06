@@ -29,8 +29,9 @@ export default function DatenschutzPage() {
         <section>
           <h2 className="font-bold text-slate-900">2a. Kundenkonto</h2>
           <p>
-            Für den Zugang zu den Angebotsdetails können Sie ein kostenloses Konto anlegen. Wenn Sie ein Angebot anfragen, legen wir das Konto
-            automatisch an und senden Ihnen einen Anmeldelink per E-Mail (ohne Passwort). Wir speichern Name, E-Mail-Adresse, Telefonnummer,
+            Für den Zugang zu den Angebotsdetails können Sie ein kostenloses Konto anlegen. Nach einer Anfrage sehen Sie die Angebotsdetails auch ohne
+            Konto: Dafür setzen wir ein technisch notwendiges Cookie („iab_unlocked“, Laufzeit ein Jahr), das nur speichert, dass Sie eine
+            Anfrage gestellt haben. Wir speichern Name, E-Mail-Adresse, Telefonnummer,
             ggf. Passwort (verschlüsselt), optional Firma sowie, welche Angebote Sie angesehen haben. Eine Weitergabe an Anbieter erfolgt
             erst, wenn Sie ein Angebot ausdrücklich anfragen. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO. Sie können Ihr Konto jederzeit
             per E-Mail löschen lassen.

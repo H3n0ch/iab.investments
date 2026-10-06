@@ -1,7 +1,6 @@
 'use server'
 
-import { headers } from 'next/headers'
-import { magicAccessLink, sendSupabaseMagicLink } from '@/lib/account'
+import { cookies, headers } from 'next/headers'
 import { CATEGORIES, formatEuro, getCategory, GOALS } from '@/lib/categories'
 import { categoryShareText, CONSENT_VERSION, offerShareText } from '@/lib/consent'
 import {
@@ -20,7 +19,8 @@ import {
 import { getCurrentUser } from '@/lib/auth'
 import { getPublicOffer } from '@/lib/offers'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import { sendCalcReport, sendLeadAdminNotification, sendLeadConfirmation, sendOfferInquiryConfirmation } from '@/lib/email'
+import { sendCalcReport, sendLeadAdminNotification, sendLeadConfirmation } from '@/lib/email'
+import { UNLOCK_COOKIE } from '@/lib/unlock'
 import { calcHint, computeCalc, eur, eur2, isTaxYear, reportRows, type CalcParams } from '@/lib/rechner'
 
 export type LeadFormState = { ok: boolean; error?: string; fieldErrors?: Record<string, string> } | null
@@ -32,6 +32,17 @@ const MIN_FILL_MS = 2500
 
 function str(fd: FormData, key: string, max = 200): string {
   return String(fd.get(key) ?? '').trim().slice(0, max)
+}
+
+/** After an inquiry the visitor sees all offer details right away – no account, no e-mail needed */
+async function unlockOffers() {
+  ;(await cookies()).set(UNLOCK_COOKIE, '1', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 365,
+    path: '/',
+  })
 }
 
 const PHONE_ERROR = 'Bitte geben Sie Ihre Telefonnummer an, damit der Anbieter Sie zurückrufen kann.'
@@ -143,6 +154,7 @@ export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<Le
     source,
     extra: [['Telefon-Einwilligung', 'ja']] as [string, string][],
   }
+  await unlockOffers()
   // A failing mail must not lose the lead – it's already stored
   await Promise.allSettled([sendLeadAdminNotification(mail), sendLeadConfirmation(mail)]).then((rs) =>
     rs.forEach((r) => r.status === 'rejected' && console.error('lead mail failed', r.reason))
@@ -318,12 +330,11 @@ export async function submitCalcReport(_prev: CalcReportState, fd: FormData): Pr
   return { ok: true, mailed }
 }
 
-export type OfferInquiryState = { ok: boolean; mailed?: boolean; signedIn?: boolean; error?: string; fieldErrors?: Record<string, string> } | null
+export type OfferInquiryState = { ok: boolean; unlocked?: boolean; error?: string; fieldErrors?: Record<string, string> } | null
 
 /**
  * Offer page: direct inquiry instead of registering first. Stores a sellable lead for exactly this offer
- * (with consent to share with its provider and to be called), then creates the account in the background
- * and mails a magic link that opens the offer with all details.
+ * (with consent to share with its provider and to be called) and unlocks all offer details via cookie.
  */
 export async function submitOfferInquiry(_prev: OfferInquiryState, fd: FormData): Promise<OfferInquiryState> {
   const renderedAt = Number(fd.get('_t') ?? 0)
@@ -332,7 +343,7 @@ export async function submitOfferInquiry(_prev: OfferInquiryState, fd: FormData)
   const slug = str(fd, 'category')
   const offerRaw = str(fd, 'offer_id')
   const category = getCategory(slug)
-  const offer = category ? await getPublicOffer(slug, offerRaw) : null
+  const [offer, user] = await Promise.all([category ? getPublicOffer(slug, offerRaw) : null, getCurrentUser()])
   if (!category || !offer) return { ok: false, error: 'Dieses Angebot ist nicht mehr verfügbar.' }
 
   const name = str(fd, 'name', 120)
@@ -362,7 +373,6 @@ export async function submitOfferInquiry(_prev: OfferInquiryState, fd: FormData)
   const path = `/${category.slug}/${offer.id}`
 
   const h = await headers()
-  const user = await getCurrentUser()
   let supabase
   try {
     supabase = getSupabaseAdmin()
@@ -408,32 +418,21 @@ export async function submitOfferInquiry(_prev: OfferInquiryState, fd: FormData)
   const { data: cat } = await supabase.from('categories').select('id').eq('slug', category.slug).maybeSingle()
   if (cat) await supabase.from('lead_categories').insert({ lead_id: lead.id, category_id: cat.id })
 
-  // Account in the background – a failure never loses the lead
-  const account = { email, full_name: name, phone, company }
-  const accessLink = user ? null : await magicAccessLink(account, path).catch(() => null)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  await unlockOffers()
+
   const deadline = iabYear ? formatDeadline(iabYear) : null
+  await sendLeadAdminNotification({
+    id: lead.id, name, email, phone, company,
+    amountLabel: null, deadline, goalLabel: null,
+    categoryNames: [category.name], source: 'angebot',
+    extra: [
+      ['Angebot', offer.title],
+      ['Rechtsform', legalLabel],
+      ['Investition', `${formatEuro(investment)} netto`],
+      ['Zeitpunkt', timingLabel],
+      ['Telefon-Einwilligung', 'ja'],
+    ],
+  }).catch((e) => console.error('offer inquiry admin mail failed', e))
 
-  const [mailed] = await Promise.all([
-    sendOfferInquiryConfirmation({ name, email, offerTitle: offer.title, offerUrl: `${appUrl}${path}`, accessLink, deadline }).catch((e) => {
-      console.error('offer inquiry mail failed', e)
-      return false
-    }),
-    sendLeadAdminNotification({
-      id: lead.id, name, email, phone, company,
-      amountLabel: null, deadline, goalLabel: null,
-      categoryNames: [category.name], source: 'angebot',
-      extra: [
-        ['Angebot', offer.title],
-        ['Rechtsform', legalLabel],
-        ['Investition', `${formatEuro(investment)} netto`],
-        ['Zeitpunkt', timingLabel],
-        ['Telefon-Einwilligung', 'ja'],
-      ],
-    }).catch((e) => console.error('offer inquiry admin mail failed', e)),
-  ])
-  // Without Resend, Supabase's own mailer delivers the sign-in link
-  if (!mailed && !user) await sendSupabaseMagicLink(account, path).catch(() => {})
-
-  return { ok: true, mailed, signedIn: Boolean(user) }
+  return { ok: true, unlocked: true }
 }

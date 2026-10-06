@@ -122,45 +122,6 @@ export async function sendLeadConfirmation(lead: LeadMailData) {
   })
 }
 
-export type OfferInquiryMail = {
-  name: string
-  email: string
-  offerTitle: string
-  offerUrl: string
-  /** Magic link that signs the lead in and opens the offer with all details; null when signed in already */
-  accessLink: string | null
-  deadline: string | null
-}
-
-/** Confirmation of an offer inquiry, carrying the magic link to the unlocked offer. Returns false without Resend. */
-export async function sendOfferInquiryConfirmation(m: OfferInquiryMail): Promise<boolean> {
-  const resend = getResend()
-  if (!resend) return false
-  const link = m.accessLink ?? m.offerUrl
-  await resend.emails.send({
-    from: FROM,
-    to: [m.email],
-    replyTo: ADMIN_TO,
-    subject: `Ihre Anfrage: ${m.offerTitle}`,
-    html: layout(`
-      <h1 style="color:#0f172a;font-size:20px;margin:0 0 12px;line-height:1.3;">Danke, ${esc(m.name.split(' ')[0])}!</h1>
-      <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
-        Ihre Anfrage zu <strong>${esc(m.offerTitle)}</strong> ist eingegangen. Der Anbieter meldet sich in Kürze bei Ihnen, kostenlos und unverbindlich.
-      </p>
-      <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
-        Über diesen Link sehen Sie alle Details, Kennzahlen und Unterlagen zum Angebot${m.accessLink ? '. Ein Passwort brauchen Sie dafür nicht' : ''}:
-      </p>
-      <a href="${link}" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Angebotsdetails ansehen →</a>
-      ${m.accessLink ? '<p style="color:#64748b;font-size:12px;line-height:1.6;margin:8px 0 0;">Der Link ist aus Sicherheitsgründen nur begrenzt gültig. Später legen Sie über „Passwort vergessen“ auf der Anmeldeseite jederzeit ein Passwort für Ihr Konto fest.</p>' : ''}
-      ${m.deadline ? `<p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;color:#92400e;font-size:13px;margin:16px 0 0;">Ihre Investitionsfrist läuft voraussichtlich bis zum <strong>${esc(m.deadline)}</strong>. Planen Sie Lieferzeiten ein.</p>` : ''}
-      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:16px 0 0;">
-        Hinweis: Wir stellen den Kontakt zum Anbieter her und beraten nicht zu konkreten Angeboten oder in Steuerfragen. Verträge schließen Sie direkt mit dem Anbieter. Ihre Einwilligungen zur Weitergabe und zum Anruf können Sie jederzeit per Antwort auf diese E-Mail widerrufen.
-      </p>
-    `),
-  })
-  return true
-}
-
 export type ProviderMailData = {
   id: string
   company: string

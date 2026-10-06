@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { countryName } from '@/lib/countries'
 import { DeadlineBanner } from '@/components/DeadlineBanner'
@@ -12,6 +13,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { formatEuro, getCategory, GOALS } from '@/lib/categories'
 import { getGatedOffer, getOfferFactLabels, getPublicOffer, recordOfferView, useDemo } from '@/lib/offers'
 import type { GatedOfferData } from '@/lib/supabase/types'
+import { UNLOCK_COOKIE } from '@/lib/unlock'
 
 // Layout adapted from TinyMarket's app/projects/[id]/page.tsx:
 // sidebar (price, inquiry box) left, gallery + detail sections right.
@@ -36,7 +38,9 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
   const user = await getCurrentUser()
   // Local preview without Supabase: ?vorschau=freigeschaltet shows the unlocked view (dev only)
   const demoUnlocked = useDemo && sp.vorschau === 'freigeschaltet'
-  const unlocked = Boolean(user) || demoUnlocked
+  // Signed in, or sent an inquiry from this browser (cookie set by the inquiry actions)
+  const inquired = (await cookies()).get(UNLOCK_COOKIE)?.value === '1'
+  const unlocked = Boolean(user) || demoUnlocked || inquired
 
   const [gated, factLabels] = await Promise.all([
     unlocked ? getGatedOffer(slug, id) : Promise.resolve<GatedOfferData | null>(null),
@@ -232,7 +236,7 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
             <p className="mb-4 mt-1 text-sm text-slate-500">
               {unlocked
                 ? 'Der Anbieter meldet sich direkt bei Ihnen, kostenlos und unverbindlich.'
-                : 'Der Anbieter ruft Sie zurück. Kalkulation und Unterlagen erhalten Sie sofort per E-Mail, ohne Passwort.'}
+                : 'Der Anbieter ruft Sie zurück. Kalkulation und Unterlagen sehen Sie sofort nach Ihrer Anfrage, ohne Passwort.'}
             </p>
             <OfferInquiryForm
               categorySlug={c.slug}

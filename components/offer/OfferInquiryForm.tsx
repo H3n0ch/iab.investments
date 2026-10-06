@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { startTransition, useActionState, useEffect, useRef, useState } from 'react'
 import { submitOfferInquiry, type OfferInquiryState } from '@/lib/actions/leads'
 import { CONSENT_CALL_TEXT, CONSENT_PRIVACY_TEXT, offerShareText } from '@/lib/consent'
@@ -25,9 +26,9 @@ const lbl = 'mb-1 block text-xs font-medium text-slate-600'
 
 // Direct inquiry for one offer: replaces "register first, then request" – one step, one sellable lead
 export function OfferInquiryForm({ categorySlug, categoryName, offerId, offerTitle, minInvestment, defaults }: Props) {
+  const router = useRouter()
   const [state, action, pending] = useActionState<OfferInquiryState, FormData>(submitOfferInquiry, null)
   const [timing, setTiming] = useState('')
-  const [email, setEmail] = useState(defaults?.email ?? '')
   const tRef = useRef<HTMLInputElement>(null)
   const pathRef = useRef<HTMLInputElement>(null)
   const utmRef = useRef<HTMLInputElement>(null)
@@ -38,18 +39,19 @@ export function OfferInquiryForm({ categorySlug, categoryName, offerId, offerTit
     if (utmRef.current) utmRef.current.value = new URLSearchParams(window.location.search).get('utm_source') ?? ''
   }, [])
 
+  // The inquiry set the unlock cookie – re-render the page with all details
+  useEffect(() => {
+    if (state?.unlocked) router.refresh()
+  }, [state, router])
+
   if (state?.ok) {
     return (
       <div className="animate-fade-up rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 text-2xl text-white">✓</div>
         <p className="mt-3 text-lg font-bold text-slate-900">Anfrage gesendet</p>
-        <p className="mt-1 text-sm text-slate-600">Der Anbieter meldet sich in Kürze telefonisch bei Ihnen, kostenlos und unverbindlich.</p>
-        {!state.signedIn && (
-          <p className="mx-auto mt-3 max-w-md rounded-lg bg-white px-4 py-3 text-sm text-slate-700 ring-1 ring-emerald-200">
-            Wir haben Ihnen einen Link an <strong>{email}</strong> geschickt. Damit sehen Sie Kennzahlen, Unterlagen und Kalkulation zu
-            diesem Angebot, ohne Passwort.
-          </p>
-        )}
+        <p className="mt-1 text-sm text-slate-600">
+          Kalkulation, Kennzahlen und Unterlagen sehen Sie jetzt auf dieser Seite. Der Anbieter ruft Sie zurück, kostenlos und unverbindlich.
+        </p>
       </div>
     )
   }
@@ -85,15 +87,7 @@ export function OfferInquiryForm({ categorySlug, categoryName, offerId, offerTit
         </div>
         <input name="company" defaultValue={defaults?.company ?? undefined} placeholder="Firma (optional)" autoComplete="organization" className={input} />
         <div>
-          <input
-            name="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="E-Mail *"
-            autoComplete="email"
-            className={input}
-          />
+          <input name="email" type="email" defaultValue={defaults?.email ?? undefined} placeholder="E-Mail *" autoComplete="email" className={input} />
           {err('email')}
         </div>
         <div>

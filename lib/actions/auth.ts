@@ -41,7 +41,6 @@ export type RegisterState = { ok: boolean; needsConfirm?: boolean; error?: strin
 /** Used by the register page and the register modal (useActionState). Every new account also becomes a CRM lead. */
 export async function registerAccount(_prev: RegisterState, formData: FormData): Promise<RegisterState> {
   if (!isSupabaseConfigured) return { ok: false, error: NOT_CONFIGURED }
-  const redirectTo = safeRedirectPath(formData.get('redirectTo'))
 
   const full_name = String(formData.get('full_name') ?? '').trim().slice(0, 120)
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
@@ -55,24 +54,26 @@ export async function registerAccount(_prev: RegisterState, formData: FormData):
   if (password.length < 8) return { ok: false, error: 'Das Passwort muss mindestens 8 Zeichen haben.' }
   if (formData.get('consent_privacy') !== 'on') return { ok: false, error: 'Bitte bestätigen Sie die Datenschutzerklärung.' }
 
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.signUp({
+  // Created confirmed via the admin API, then signed in right away: no confirmation mail, the details unlock instantly.
+  // (signUp with "Confirm email" on waited for Supabase's mailer and returned no session.)
+  const { data, error } = await getSupabaseAdmin().auth.admin.createUser({
     email,
     password,
-    options: {
-      // Picked up by the handle_new_user trigger (supabase/schema.sql)
-      data: { full_name, phone, company },
-      emailRedirectTo: `${APP_URL}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
-    },
+    email_confirm: true,
+    // Picked up by the handle_new_user trigger (supabase/schema.sql)
+    user_metadata: { full_name, phone, company },
   })
-  // With e-mail confirmation on, Supabase answers an existing address with a user without identities instead of an error
-  if (error?.message.includes('already registered') || (data.user && data.user.identities?.length === 0)) {
+  if (error?.code === 'email_exists' || /already (been )?registered/i.test(error?.message ?? '')) {
     return { ok: false, error: 'Für diese E-Mail-Adresse gibt es bereits ein Konto. Bitte melden Sie sich an.' }
   }
   if (error || !data.user) {
-    console.error('signUp failed', error)
+    console.error('createUser failed', error)
     return { ok: false, error: 'Registrierung fehlgeschlagen. Bitte prüfen Sie Ihre Angaben.' }
   }
+
+  const supabase = await createClient()
+  const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+  if (signInErr) console.error('sign-in after register failed', signInErr)
 
   // A failing CRM entry must not block the account
   try {
@@ -104,7 +105,7 @@ export async function registerAccount(_prev: RegisterState, formData: FormData):
   }
 
   revalidatePath('/', 'layout')
-  return { ok: true, needsConfirm: !data.session }
+  return { ok: true, needsConfirm: Boolean(signInErr) }
 }
 
 export async function signOut() {

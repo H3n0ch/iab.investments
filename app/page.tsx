@@ -16,7 +16,7 @@ import { guidesBySlug } from '@/lib/wissen'
 
 export const revalidate = 300
 
-const HERO_IMAGES = ['photovoltaik-iab', 'batteriespeicher-iab', 'mietcontainer-iab']
+const HERO_IMAGES = ['photovoltaik-iab', 'batteriespeicher-iab', 'mietcontainer-iab', 'tiny-house-iab', 'wohnmobil-iab', 'ladeinfrastruktur-iab']
   .map((slug) => getCategory(slug))
   .filter((c) => c?.image) as NonNullable<ReturnType<typeof getCategory>>[]
 
@@ -34,17 +34,17 @@ export default async function Home() {
       {/* Hero: search only (marketplace entry, like Milk the Sun) */}
       {/* No overflow-hidden on the section: the search dropdowns must be able to extend below the hero */}
       <section className="relative z-10 bg-slate-900">
-        {/* Three category photos side by side under a ~85 % navy overlay */}
+        {/* Six category photos in two rows of three under a ~85 % navy overlay */}
         <div aria-hidden className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 grid grid-cols-1 sm:grid-cols-3">
-            {HERO_IMAGES.map((c, i) => (
-              <div key={c.slug} className={`relative ${i > 0 ? 'hidden sm:block' : ''}`}>
+          <div className="absolute inset-0 grid grid-cols-3 grid-rows-2">
+            {HERO_IMAGES.map((c) => (
+              <div key={c.slug} className="relative">
                 <Image
                   src={c.image!.src}
                   alt=""
                   fill
                   loading="eager"
-                  sizes="(min-width: 640px) 34vw, 100vw"
+                  sizes="34vw"
                   className="object-cover"
                   style={{ objectPosition: c.image!.position }}
                 />
