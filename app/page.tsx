@@ -46,17 +46,18 @@ export default async function Home() {
         </div>
 
         {/* Spacer for the fixed header */}
-        <div className="h-16 shrink-0 sm:h-20" />
+        <div className="h-[68px] shrink-0 lg:h-[84px]" />
         <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-12 text-center">
           <DeadlineBanner />
-          <h1 className="mt-6 text-4xl font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(2,6,23,0.6)] sm:text-6xl">
+          <h1 className="mt-6 text-balance text-[clamp(32px,4.4vw,52px)] font-bold leading-[1.08] tracking-[-0.02em] text-white [text-shadow:0_2px_6px_rgba(0,0,0,.35),0_10px_36px_rgba(0,0,0,.35)]">
             Investieren statt abführen.
           </h1>
-          <div className="mt-5 max-w-xl rounded-xl bg-slate-900/55 px-6 py-3 ring-1 ring-white/10 backdrop-blur-md">
-            <p className="text-base font-semibold text-white sm:text-lg">Die Plattform für Investments mit Investitionsabzugsbetrag.</p>
-            <p className="mt-1 text-sm text-slate-300">Von PV über Batteriespeicher bis zum Tiny House.</p>
+          {/* Exactly two lines from sm up: one sentence per line */}
+          <div className="mt-4 max-w-full text-balance rounded-[14px] bg-[rgb(9_24_38/0.42)] px-[18px] py-2.5 shadow-[0_10px_30px_-14px_rgba(0,0,0,.5)] ring-1 ring-white/15 backdrop-blur-[10px]">
+            <p className="text-[clamp(15px,1.15vw,17px)] font-medium leading-normal text-white sm:whitespace-nowrap">Die Plattform für Investments mit Investitionsabzugsbetrag.</p>
+            <p className="mt-1 text-sm text-slate-300 sm:whitespace-nowrap">Von PV über Batteriespeicher bis zum Tiny House.</p>
           </div>
-          <OfferSearch className="mt-8 w-full text-left" />
+          <OfferSearch className="mt-[clamp(28px,4vh,44px)] w-full text-left" />
         </div>
 
         <a

@@ -69,7 +69,7 @@ export default function IabFaqPage() {
       <div className="mt-12 rounded-2xl bg-slate-900 p-6 text-white">
         <p className="text-lg font-bold">Frist läuft? Alle Angebote mit Kennzahlen und Unterlagen sehen.</p>
         <ModalButton modal="register" className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 font-semibold hover:bg-emerald-500">
-          Kostenlos registrieren →
+          Kostenlos registrieren
         </ModalButton>
       </div>
 

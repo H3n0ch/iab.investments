@@ -1,18 +1,18 @@
 'use client'
 
 // Header in the style of Milk the Sun: logo left, white pill navigation in the middle, outlined pill buttons right.
-// On the home page it floats transparent over the hero photo and turns navy once the page is scrolled.
+// Transparent on every page; once scrolled it turns into frosted glass (navy only with the mobile menu open). On the home page it floats over the hero photo.
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { AuthNav } from './AuthNav'
+import { AuthNav, RegisterContent, register } from './AuthNav'
 import { ModalButton } from './ModalButton'
 
 export function Logo({ dark = false }: { dark?: boolean }) {
   return (
     <span className={`text-lg font-extrabold tracking-tight ${dark ? 'text-slate-900' : 'text-white'}`}>
-      iab<span className="text-emerald-500">.investments</span>
+      iab<span className={dark ? 'text-emerald-600' : 'text-emerald-400'}>.investments</span>
     </span>
   )
 }
@@ -48,28 +48,33 @@ export function Header() {
     setMenu(false)
   }
 
-  const transparent = home && !scrolled && !menu
+  const transparent = !menu && !scrolled
+  const frosted = !menu && scrolled
 
   return (
     <header
       className={`${home ? 'fixed inset-x-0' : 'sticky'} top-0 z-40 transition-colors duration-300 ${
-        transparent ? 'bg-transparent' : 'bg-slate-900/95 shadow-lg shadow-slate-950/20 backdrop-blur'
+        transparent
+          ? 'bg-transparent'
+          : frosted
+            ? 'bg-slate-900/25 shadow-[inset_0_-1px_0_rgb(255_255_255/0.1)] backdrop-blur-md backdrop-saturate-150'
+            : 'bg-slate-900/95 shadow-lg shadow-slate-950/20 backdrop-blur'
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20">
+      <div className="mx-auto flex h-[68px] max-w-[1480px] items-center justify-between gap-4 px-4 sm:px-[clamp(16px,3vw,56px)] lg:h-[84px]">
         <Link href="/" aria-label="Startseite" className="shrink-0">
           <Logo />
         </Link>
 
-        <nav aria-label="Hauptnavigation" className="hidden rounded-full bg-white px-2 py-1.5 shadow-lg shadow-slate-950/10 lg:block">
-          <ul className="flex items-center">
+        <nav aria-label="Hauptnavigation" className="hidden rounded-full bg-white p-1.5 shadow-[0_16px_40px_-18px_rgb(5_20_40/0.6)] lg:block">
+          <ul className="flex items-center gap-0.5">
             {NAV.map((n) => (
               <li key={n.href}>
                 <Link
                   href={n.href}
                   aria-current={isActive(pathname, n.href) ? 'page' : undefined}
-                  className={`block whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors xl:px-4 ${
-                    isActive(pathname, n.href) ? 'text-emerald-600' : 'text-slate-800 hover:text-emerald-600'
+                  className={`flex h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold tracking-[.005em] transition-colors xl:px-4 xl:text-[15.5px] ${
+                    isActive(pathname, n.href) ? 'text-emerald-600' : 'text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   {n.label}
@@ -86,7 +91,7 @@ export function Header() {
             onClick={() => setMenu((m) => !m)}
             aria-expanded={menu}
             aria-label={menu ? 'Menü schließen' : 'Menü öffnen'}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-white ring-1 ring-white/40 transition-colors hover:bg-white/10 lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-white ring-[1.5px] ring-white/50 transition-colors hover:bg-white/10 lg:hidden"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5" aria-hidden>
               {menu ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -114,9 +119,9 @@ export function Header() {
           </ul>
           <ModalButton
             modal="register"
-            className="mx-auto mt-3 block w-full max-w-7xl rounded-xl bg-emerald-600 px-4 py-3 text-base font-semibold text-white hover:bg-emerald-500 sm:hidden"
+            className={`${register} mx-auto mt-3 flex w-full max-w-7xl justify-center sm:hidden`}
           >
-            Kostenlos registrieren
+            <RegisterContent />
           </ModalButton>
         </nav>
       )}

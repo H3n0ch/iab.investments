@@ -73,7 +73,7 @@ export default function RatgeberPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <ModalButton modal="register" className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold hover:bg-emerald-500">Kostenlos registrieren →</ModalButton>
+          <ModalButton modal="register" className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold hover:bg-emerald-500">Kostenlos registrieren</ModalButton>
           <Link href="/so-funktionierts" className="rounded-lg px-4 py-2 font-semibold text-slate-200 ring-1 ring-white/20 hover:bg-white/10">
             So funktioniert&apos;s
           </Link>

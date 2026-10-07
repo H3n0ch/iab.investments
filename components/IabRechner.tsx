@@ -375,7 +375,7 @@ function MatchingOffers({ offers, category, investment, iab }: { offers: MarketO
                   {o.expected_yield && <p className="text-[11px] text-emerald-700">{o.expected_yield}</p>}
                 </Link>
                 <Link href={`${href}#anfrage`} className="bg-emerald-600 py-2 text-center text-xs font-bold text-white hover:bg-emerald-500">
-                  Angebot anfragen →
+                  Angebot anfragen
                 </Link>
               </li>
             )

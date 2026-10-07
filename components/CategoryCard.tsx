@@ -4,7 +4,7 @@ import { formatEuro, type Category } from '@/lib/categories'
 
 export function CategoryCard({ category: c }: { category: Category }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-lg">
       <Link href={`/${c.slug}`} className={`relative flex h-40 items-center justify-center overflow-hidden bg-linear-to-br ${c.gradient}`}>
         {c.image ? (
           <>

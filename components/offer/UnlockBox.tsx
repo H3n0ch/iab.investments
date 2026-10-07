@@ -43,7 +43,7 @@ export function UnlockBox({
           href="#anfrage"
           className="mt-3 block rounded-lg bg-emerald-600 py-2 text-center text-sm font-bold text-white transition-colors hover:bg-emerald-500"
         >
-          Angebot anfragen →
+          Angebot anfragen
         </a>
       </div>
     )

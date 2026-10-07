@@ -126,7 +126,7 @@ export function OfferList({ category: c, offers }: Props) {
             href="#anfrage"
             className="mt-3 block rounded-lg bg-emerald-500 py-2 text-center text-xs font-bold text-white transition-colors hover:bg-emerald-400"
           >
-            Allgemein anfragen →
+            Allgemein anfragen
           </a>
         </div>
       </aside>

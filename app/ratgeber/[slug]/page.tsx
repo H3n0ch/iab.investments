@@ -129,7 +129,7 @@ export default async function ArticlePage({ params }: PageProps<'/ratgeber/[slug
             <p className="mt-1 text-sm text-slate-300">Kostenlos registrieren und alle Angebote mit Kennzahlen und Unterlagen sehen. Bei Fragen helfen wir bei der Suche.</p>
             <div className="mt-4 flex flex-wrap gap-3">
               <ModalButton modal="register" className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold hover:bg-emerald-500">
-                Kostenlos registrieren →
+                Kostenlos registrieren
               </ModalButton>
               <Link href="/so-funktionierts" className="rounded-lg px-4 py-2 font-semibold text-slate-200 ring-1 ring-white/20 hover:bg-white/10">
                 So funktioniert&apos;s
