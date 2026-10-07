@@ -24,7 +24,8 @@ export function MarketHeroImageFallback({ defaultSlug }: { defaultSlug: string }
 
 function Layers({ slugs, active }: { slugs: string[]; active: string }) {
   return (
-    <div aria-hidden className="absolute inset-0 overflow-hidden">
+    // Mobile: full width under the navy overlay. md+: right half only, fading into the navy behind the text.
+    <div aria-hidden className="absolute inset-y-0 right-0 left-0 overflow-hidden md:left-1/2">
       {slugs.map((slug) => {
         const img = CATEGORIES.find((c) => c.slug === slug)?.image
         if (!img) return null
@@ -35,13 +36,13 @@ function Layers({ slugs, active }: { slugs: string[]; active: string }) {
             alt=""
             fill
             loading="eager"
-            sizes="100vw"
+            sizes="(min-width: 768px) 50vw, 100vw"
             className={`object-cover transition-opacity duration-500 ${slug === active ? 'opacity-100' : 'opacity-0'}`}
             style={{ objectPosition: img.position }}
           />
         )
       })}
-      <div className="absolute inset-0 bg-slate-900/85" />
+      <div className="absolute inset-0 bg-slate-900/85 md:bg-transparent md:bg-linear-to-r md:from-slate-900 md:via-slate-900/50 md:to-slate-900/10" />
     </div>
   )
 }

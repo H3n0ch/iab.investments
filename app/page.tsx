@@ -16,7 +16,7 @@ import { guidesBySlug } from '@/lib/wissen'
 
 export const revalidate = 300
 
-const HERO_IMAGES = ['photovoltaik-iab', 'batteriespeicher-iab', 'mietcontainer-iab', 'tiny-house-iab', 'wohnmobil-iab', 'ladeinfrastruktur-iab']
+const HERO_IMAGES = ['photovoltaik-iab', 'tiny-house-iab', 'mietcontainer-iab', 'batteriespeicher-iab','wohnmobil-iab', 'ladeinfrastruktur-iab']
   .map((slug) => getCategory(slug))
   .filter((c) => c?.image) as NonNullable<ReturnType<typeof getCategory>>[]
 
@@ -63,7 +63,7 @@ export default async function Home() {
               <span className="text-emerald-400">Finden Sie das passende Investitionsgut.</span>
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base text-slate-300 sm:text-lg">
-              Von PV über Batteriespeicher bis zum Tiny House: Finden Sie die passende Investition für Ihren IAB. Alle Preise netto.
+              Von PV über Batteriespeicher bis zum Tiny House: Finden Sie die passende Investition für Ihren IAB. 
             </p>
             <OfferSearch className="mt-8 text-left" />
           </div>
