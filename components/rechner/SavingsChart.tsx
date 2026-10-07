@@ -6,7 +6,7 @@ import type { CurvePoint } from '@/lib/tax'
 // Two small charts sharing one x-axis (IAB in €): cumulative saving on top, marginal rate below.
 // Two measures of different scale → two charts, never a dual y-axis. One crosshair spans both.
 
-const ACCENT = '#059669' // emerald-600 – the data
+const ACCENT = '#16a34a' // emerald-600 (brand green) – the data
 const GRID = '#e2e8f0' // slate-200 – hairline grid
 const AXIS_TEXT = '#64748b' // slate-500
 const INK = '#0f172a' // slate-900 – "Ihr IAB" marker

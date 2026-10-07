@@ -16,10 +16,7 @@ import { guidesBySlug } from '@/lib/wissen'
 
 export const revalidate = 300
 
-const HERO_IMAGES = ['photovoltaik-iab', 'tiny-house-iab', 'mietcontainer-iab', 'batteriespeicher-iab','wohnmobil-iab', 'ladeinfrastruktur-iab']
-  .map((slug) => getCategory(slug))
-  .filter((c) => c?.image) as NonNullable<ReturnType<typeof getCategory>>[]
-
+const HERO_IMAGE = getCategory('batteriespeicher-iab')!.image!
 
 export default async function Home() {
   const years = iabYears()
@@ -31,43 +28,46 @@ export default async function Home() {
 
   return (
     <>
-      {/* Hero: search only (marketplace entry, like Milk the Sun) */}
+      {/* Hero in the style of Milk the Sun: full-height photos, header floating on top, slogan, glass subline, search */}
       {/* No overflow-hidden on the section: the search dropdowns must be able to extend below the hero */}
-      <section className="relative z-10 bg-slate-900">
-        {/* Six category photos in two rows of three under a ~85 % navy overlay */}
+      <section className="relative z-10 flex min-h-svh flex-col bg-slate-900">
+        {/* One full-bleed photo, no colour filter – only a light neutral shade at the top (header) and behind the text */}
         <div aria-hidden className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 grid grid-cols-3 grid-rows-2">
-            {HERO_IMAGES.map((c) => (
-              <div key={c.slug} className="relative">
-                <Image
-                  src={c.image!.src}
-                  alt=""
-                  fill
-                  loading="eager"
-                  sizes="34vw"
-                  className="object-cover"
-                  style={{ objectPosition: c.image!.position }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="absolute inset-0 bg-slate-900/85" />
-          <div className="pointer-events-none absolute -right-40 -top-40 h-120 w-120 rounded-full bg-emerald-500/15 blur-3xl" />
+          <Image
+            src={HERO_IMAGE.src}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+            style={{ objectPosition: HERO_IMAGE.position }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-black/45 via-black/10 to-black/25" />
         </div>
-        <div className="relative mx-auto max-w-4xl px-4 py-12 text-center sm:py-20">
-          <div>
-            <DeadlineBanner />
-            <h1 className="mt-4 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-              Ihr IAB läuft aus?
-              <br />
-              <span className="text-emerald-400">Finden Sie das passende Investitionsgut.</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-slate-300 sm:text-lg">
-              Von PV über Batteriespeicher bis zum Tiny House: Finden Sie die passende Investition für Ihren IAB. 
-            </p>
-            <OfferSearch className="mt-8 text-left" />
+
+        {/* Spacer for the fixed header */}
+        <div className="h-16 shrink-0 sm:h-20" />
+        <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-12 text-center">
+          <DeadlineBanner />
+          <h1 className="mt-6 text-4xl font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(2,6,23,0.6)] sm:text-6xl">
+            Investieren statt abführen.
+          </h1>
+          <div className="mt-5 max-w-xl rounded-xl bg-slate-900/55 px-6 py-3 ring-1 ring-white/10 backdrop-blur-md">
+            <p className="text-base font-semibold text-white sm:text-lg">Die Plattform für Investments mit Investitionsabzugsbetrag.</p>
+            <p className="mt-1 text-sm text-slate-300">Von PV über Batteriespeicher bis zum Tiny House.</p>
           </div>
+          <OfferSearch className="mt-8 w-full text-left" />
         </div>
+
+        <a
+          href="#kategorien"
+          aria-label="Weiter nach unten"
+          className="relative mx-auto mb-6 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/50 text-white ring-1 ring-white/30 backdrop-blur transition-colors hover:bg-slate-900/70"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5" aria-hidden>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </a>
       </section>
 
       <TrustBar />

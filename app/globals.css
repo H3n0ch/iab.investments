@@ -11,6 +11,22 @@
   --font-sans: var(--font-inter);
 }
 
+/* Brand green: a clear "check mark / OK" green, brighter and more positive than Tailwind's emerald.
+   Overrides the emerald scale so every emerald-* class on the site follows. 600 keeps white text readable. */
+@theme {
+  --color-emerald-50: #f0fdf4;
+  --color-emerald-100: #dcfce7;
+  --color-emerald-200: #bbf7d0;
+  --color-emerald-300: #86efac;
+  --color-emerald-400: #4ade80;
+  --color-emerald-500: #22c55e;
+  --color-emerald-600: #16a34a;
+  --color-emerald-700: #15803d;
+  --color-emerald-800: #166534;
+  --color-emerald-900: #14532d;
+  --color-emerald-950: #052e16;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

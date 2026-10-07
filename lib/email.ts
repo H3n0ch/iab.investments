@@ -22,7 +22,7 @@ function layout(content: string): string {
 
     <div style="background:#0f172a;padding:20px 32px;">
       <a href="${APP_URL}" style="text-decoration:none;display:inline-block;">
-        <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:1;">iab<span style="color:#10b981;">.investments</span></span>
+        <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;line-height:1;">iab<span style="color:#22c55e;">.investments</span></span>
       </a>
       <p style="margin:4px 0 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;">Investitionsgüter für Ihren IAB</p>
     </div>
@@ -81,7 +81,7 @@ export async function sendLeadAdminNotification(lead: LeadMailData) {
     replyTo: lead.email,
     subject: `Neuer IAB-Lead: ${lead.name} · ${lead.categoryNames.join(', ') || SOURCE_LABELS[lead.source] || lead.source}`,
     html: layout(`
-      <p style="color:#10b981;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Neuer Lead</p>
+      <p style="color:#22c55e;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Neuer Lead</p>
       <h1 style="color:#0f172a;font-size:20px;margin:0 0 20px;line-height:1.3;">${esc(lead.name)}</h1>
       <table style="width:100%;border-collapse:collapse;">
         ${row('E-Mail', esc(lead.email))}
@@ -95,7 +95,7 @@ export async function sendLeadAdminNotification(lead: LeadMailData) {
         ${row('Quelle', esc(SOURCE_LABELS[lead.source] ?? lead.source))}
         ${lead.message ? row('Nachricht', esc(lead.message).replace(/\n/g, '<br>')) : ''}
       </table>
-      <a href="${APP_URL}/admin/leads?id=${lead.id}" style="display:inline-block;margin-top:24px;background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Im CRM öffnen →</a>
+      <a href="${APP_URL}/admin/leads?id=${lead.id}" style="display:inline-block;margin-top:24px;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Im CRM öffnen →</a>
     `),
   })
 }
@@ -143,7 +143,7 @@ export async function sendProviderAdminNotification(p: ProviderMailData) {
     replyTo: p.email,
     subject: `Neue Anbieter-Einreichung: ${p.company} · ${p.title}`,
     html: layout(`
-      <p style="color:#10b981;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Neue Einreichung</p>
+      <p style="color:#22c55e;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Neue Einreichung</p>
       <h1 style="color:#0f172a;font-size:20px;margin:0 0 20px;line-height:1.3;">${esc(p.title)}</h1>
       <table style="width:100%;border-collapse:collapse;">
         ${row('Firma', esc(p.company))}
@@ -154,7 +154,7 @@ export async function sendProviderAdminNotification(p: ProviderMailData) {
         ${row('Kategorie', esc(p.categoryName))}
         ${p.minInvestment ? row('Einstieg', esc(p.minInvestment)) : ''}
       </table>
-      <a href="${APP_URL}/admin/anbieter" style="display:inline-block;margin-top:24px;background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Prüfen und freischalten →</a>
+      <a href="${APP_URL}/admin/anbieter" style="display:inline-block;margin-top:24px;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Prüfen und freischalten →</a>
     `),
   })
 }
@@ -190,7 +190,7 @@ export async function sendPartnerAdminNotification(p: PartnerMailData) {
     replyTo: p.email,
     subject: `Neue Partner-Anmeldung: ${p.firm}`,
     html: layout(`
-      <p style="color:#10b981;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Partnerprogramm Steuerberater</p>
+      <p style="color:#22c55e;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Partnerprogramm Steuerberater</p>
       <h1 style="color:#0f172a;font-size:20px;margin:0 0 20px;line-height:1.3;">${esc(p.firm)}</h1>
       <table style="width:100%;border-collapse:collapse;">
         ${row('Ansprechpartner', esc(p.contactName))}
@@ -198,7 +198,7 @@ export async function sendPartnerAdminNotification(p: PartnerMailData) {
         ${p.phone ? row('Telefon', esc(p.phone)) : ''}
         ${p.city ? row('Ort', esc(p.city)) : ''}
       </table>
-      <a href="${APP_URL}/admin/partner" style="display:inline-block;margin-top:24px;background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Prüfen und freischalten →</a>
+      <a href="${APP_URL}/admin/partner" style="display:inline-block;margin-top:24px;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Prüfen und freischalten →</a>
     `),
   })
 }
@@ -256,7 +256,7 @@ export async function sendPasswordReset(p: { email: string; link: string }): Pro
       <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
         Sie haben angefordert, Ihr Passwort zurückzusetzen. Klicken Sie auf den Button, um ein neues Passwort festzulegen. Der Link ist eine Stunde gültig.
       </p>
-      <a href="${p.link}" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Neues Passwort festlegen →</a>
+      <a href="${p.link}" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Neues Passwort festlegen →</a>
       <p style="color:#64748b;font-size:12px;line-height:1.6;margin:16px 0 0;">
         Sie haben das nicht angefordert? Dann ignorieren Sie diese E-Mail einfach. Ihr Passwort bleibt unverändert.
       </p>
@@ -283,14 +283,14 @@ export async function sendCalcReport(r: CalcReportMail): Promise<boolean> {
     replyTo: ADMIN_TO,
     subject: `Ihr IAB-Bericht: ${r.saving} Steuerersparnis`,
     html: layout(`
-      <p style="color:#10b981;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">IAB-Rechner</p>
+      <p style="color:#22c55e;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">IAB-Rechner</p>
       <h1 style="color:#0f172a;font-size:20px;margin:0 0 6px;line-height:1.3;">Hallo ${esc(r.name.split(' ')[0])}, Ihre Steuerersparnis: ${esc(r.saving)}</h1>
       <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">Hier ist Ihr Ergebnis aus dem IAB-Rechner im Überblick.</p>
       <table style="width:100%;border-collapse:collapse;">
         ${r.rows.map(([k, v]) => row(esc(k), esc(v))).join('')}
       </table>
       <p style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 16px;color:#065f46;font-size:13px;line-height:1.6;margin:16px 0;">${esc(r.hint)}</p>
-      <a href="${APP_URL}/angebote" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Passende Angebote ansehen →</a>
+      <a href="${APP_URL}/angebote" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Passende Angebote ansehen →</a>
       <p style="color:#64748b;font-size:12px;line-height:1.6;margin:16px 0 0;">
         Rechenhilfe, keine Steuerberatung. Der IAB ist eine Steuerstundung: Im Jahr der Investition wird er dem Gewinn wieder hinzugerechnet. Lassen Sie Ihre Situation von Ihrem Steuerberater prüfen.
       </p>

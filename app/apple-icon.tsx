@@ -18,7 +18,7 @@ export default function AppleIcon() {
           background: '#0f172a',
         }}
       >
-        <div style={{ width: 36, height: 36, borderRadius: 18, background: '#10b981', marginBottom: 12 }} />
+        <div style={{ width: 36, height: 36, borderRadius: 18, background: '#22c55e', marginBottom: 12 }} />
         <div style={{ width: 34, height: 74, borderRadius: 9, background: '#ffffff' }} />
       </div>
     ),
