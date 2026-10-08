@@ -45,7 +45,7 @@ export default async function CategoryPage({ params }: PageProps<'/[slug]'>) {
   return (
     <>
       {/* Compact header – the offer list is the main content */}
-      <section className="hero-under-header relative overflow-hidden bg-slate-900">
+      <section className="hero-under-header relative overflow-hidden bg-hero">
         {c.image && (
           <>
             <Image
@@ -57,7 +57,7 @@ export default async function CategoryPage({ params }: PageProps<'/[slug]'>) {
               className="object-cover opacity-35"
               style={{ objectPosition: c.image.position }}
             />
-            <div aria-hidden className="absolute inset-0 bg-linear-to-r from-slate-900 via-slate-900/85 to-slate-900/40" />
+            <div aria-hidden className="absolute inset-0 bg-linear-to-r from-hero via-hero/85 to-hero/40" />
             {c.image.credit && <span className="absolute bottom-1 right-2 z-10 text-[10px] text-white/50">{c.image.credit}</span>}
           </>
         )}

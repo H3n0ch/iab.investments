@@ -42,7 +42,7 @@ export default function SteuerberaterPage() {
 
   return (
     <>
-      <section className="hero-under-header bg-slate-900">
+      <section className="hero-under-header bg-linear-to-br from-hero to-hero-2">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / Für Steuerberater

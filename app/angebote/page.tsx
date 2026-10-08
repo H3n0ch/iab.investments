@@ -45,7 +45,7 @@ export default async function AngebotePage() {
 
   return (
     <>
-      <section className="hero-under-header relative bg-slate-900">
+      <section className="hero-under-header relative bg-hero">
         {/* Photo of the selected category under a ~85 % navy overlay, like the home hero */}
         <Suspense fallback={<MarketHeroImageFallback defaultSlug={defaultSlug} />}>
           <MarketHeroImage defaultSlug={defaultSlug} />

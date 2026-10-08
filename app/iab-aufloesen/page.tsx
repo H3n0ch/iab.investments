@@ -67,7 +67,7 @@ export default async function IabAufloesenPage() {
 
   return (
     <>
-      <section className="hero-under-header bg-slate-900">
+      <section className="hero-under-header bg-linear-to-br from-hero to-hero-2">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / IAB auflösen

@@ -36,7 +36,7 @@ export default async function EmpfehlungPage({ params }: PageProps<'/empfehlung/
 
   return (
     <>
-      <section className="hero-under-header bg-slate-900">
+      <section className="hero-under-header bg-linear-to-br from-hero to-hero-2">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:py-14">
           {partner && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-400/30">

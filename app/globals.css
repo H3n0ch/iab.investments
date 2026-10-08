@@ -23,20 +23,28 @@
   --font-sans: var(--font-figtree);
 }
 
-/* Brand green: a calm, slightly deep green – less saturated than a "check mark" green so it reads premium, not discount.
-   Overrides the emerald scale so every emerald-* class on the site follows. 600 keeps white text readable. */
+/* Structure colour (Option A): slate #1e293b – institutional, calm, FinTech/private-banking feel.
+   Used for the hero sections of the sub pages; the header bar uses the same tone. */
 @theme {
-  --color-emerald-50: #eff8f3;
-  --color-emerald-100: #d8efe2;
-  --color-emerald-200: #b3dec7;
-  --color-emerald-300: #82c6a4;
-  --color-emerald-400: #52aa80;
-  --color-emerald-500: #2f9067;
-  --color-emerald-600: #237653;
-  --color-emerald-700: #1d5f44;
-  --color-emerald-800: #1a4c38;
-  --color-emerald-900: #163f2f;
-  --color-emerald-950: #0b241a;
+  --color-hero: #1e293b;
+  --color-hero-2: #334155;
+}
+
+/* Brand green (Option A): signal green #7bb831 for CTAs – stands out against the slate structure and reads as
+   yield / approval / sustainability. Overrides the emerald scale, so every emerald-* class follows:
+   600 = button colour, 500 = hover, 700+ = text and links on white (darker for readability). */
+@theme {
+  --color-emerald-50: #f3f9ea;
+  --color-emerald-100: #e4f2d0;
+  --color-emerald-200: #cae5a5;
+  --color-emerald-300: #acd574;
+  --color-emerald-400: #94c74f;
+  --color-emerald-500: #88bf3e;
+  --color-emerald-600: #7bb831;
+  --color-emerald-700: #4f7a1e;
+  --color-emerald-800: #3f6119;
+  --color-emerald-900: #344f17;
+  --color-emerald-950: #1b2b0a;
 }
 
 body {

@@ -42,7 +42,7 @@ function Layers({ slugs, active }: { slugs: string[]; active: string }) {
           />
         )
       })}
-      <div className="absolute inset-0 bg-slate-900/85 md:bg-transparent md:bg-linear-to-r md:from-slate-900 md:via-slate-900/50 md:to-slate-900/10" />
+      <div className="absolute inset-0 bg-hero/85 md:bg-transparent md:bg-linear-to-r md:from-hero md:via-hero/50 md:to-hero/10" />
     </div>
   )
 }

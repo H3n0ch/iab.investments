@@ -39,7 +39,7 @@ const FAQ: FaqItem[] = [
 export default function FlaechePage() {
   return (
     <>
-      <section className="hero-under-header bg-slate-900">
+      <section className="hero-under-header bg-linear-to-br from-hero to-hero-2">
         <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / Fläche verpachten

@@ -79,7 +79,7 @@ export async function RechnerPage({ category }: { category?: Category }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appLd) }} />
-      <section className="hero-under-header bg-slate-900">
+      <section className="hero-under-header bg-linear-to-br from-hero to-hero-2">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> /{' '}

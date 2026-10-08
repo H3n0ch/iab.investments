@@ -26,7 +26,7 @@ const NAV = [
   { href: '/iab-aufloesen', label: 'IAB auflösen' },
 ]
 
-const SOLID = 'bg-slate-900/95 shadow-lg shadow-slate-950/20 backdrop-blur'
+const SOLID = 'bg-slate-800/95 shadow-lg shadow-slate-950/20 backdrop-blur'
 
 const isActive = (pathname: string, href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`))
 
@@ -62,7 +62,7 @@ export function Header() {
         transparent
           ? `${SOLID} [body:has(.hero-under-header)_&]:bg-transparent [body:has(.hero-under-header)_&]:shadow-none [body:has(.hero-under-header)_&]:backdrop-blur-none`
           : frosted
-            ? `${SOLID} [body:has(.hero-under-header)_&]:bg-slate-900/25 [body:has(.hero-under-header)_&]:shadow-[inset_0_-1px_0_rgb(255_255_255/0.1)] [body:has(.hero-under-header)_&]:backdrop-blur-md [body:has(.hero-under-header)_&]:backdrop-saturate-150`
+            ? `${SOLID} [body:has(.hero-under-header)_&]:bg-slate-800/25 [body:has(.hero-under-header)_&]:shadow-[inset_0_-1px_0_rgb(255_255_255/0.1)] [body:has(.hero-under-header)_&]:backdrop-blur-md [body:has(.hero-under-header)_&]:backdrop-saturate-150`
             : SOLID
       }`}
     >
