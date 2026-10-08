@@ -70,6 +70,8 @@ const SOURCE_LABELS: Record<string, string> = {
   rechner: 'IAB-Rechner',
   frist: 'Frist-Lead (IAB auflösen)',
   angebot: 'Angebotsanfrage',
+  ratgeber: 'Ratgeber-Anfrage',
+  flaeche: 'Flächen-Lead (Solarpark-Pacht)',
 }
 
 export async function sendLeadAdminNotification(lead: LeadMailData) {
@@ -100,23 +102,31 @@ export async function sendLeadAdminNotification(lead: LeadMailData) {
   })
 }
 
-export async function sendLeadConfirmation(lead: LeadMailData) {
+/** Double opt-in: the lead is only passed on after the link is clicked */
+export async function sendLeadDoi(lead: LeadMailData & { token: string }) {
   const resend = getResend()
   if (!resend) return
   const firstName = lead.name.split(' ')[0]
+  const link = `${APP_URL}/anfrage/bestaetigen?token=${encodeURIComponent(lead.token)}`
+  const topic = lead.categoryNames.length ? lead.categoryNames.join(', ') : 'Solarpark-Pacht'
   await resend.emails.send({
     from: FROM,
     to: [lead.email],
     replyTo: ADMIN_TO,
-    subject: 'Ihre IAB-Anfrage ist eingegangen',
+    subject: 'Bitte bestätigen Sie Ihre Anfrage',
     html: layout(`
-      <h1 style="color:#0f172a;font-size:20px;margin:0 0 12px;line-height:1.3;">Danke, ${esc(firstName)}!</h1>
+      <h1 style="color:#0f172a;font-size:20px;margin:0 0 12px;line-height:1.3;">Danke, ${esc(firstName)}! Ein Klick fehlt noch.</h1>
       <p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 16px;">
-        Wir haben Ihre Anfrage erhalten. Passende Anbieter aus den Bereichen <strong>${esc(lead.categoryNames.join(', '))}</strong> melden sich in Kürze bei Ihnen. Das ist für Sie kostenlos und unverbindlich.
+        Bitte bestätigen Sie Ihre E-Mail-Adresse. Erst danach bearbeiten wir Ihre Anfrage zu <strong>${esc(topic)}</strong> und senden Unterlagen und Kalkulation.
       </p>
-      ${lead.deadline ? `<p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;color:#92400e;font-size:13px;margin:0 0 16px;">Ihre Investitionsfrist läuft voraussichtlich bis zum <strong>${esc(lead.deadline)}</strong>. Planen Sie Lieferzeiten ein.</p>` : ''}
-      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0;">
-        Hinweis: Wir stellen den Kontakt zu Anbietern her und beraten nicht zu konkreten Angeboten oder in Steuerfragen. Verträge schließen Sie direkt mit dem Anbieter. Ob ein Wirtschaftsgut steuerlich für Ihren IAB geeignet ist, klären Sie bitte mit Ihrem Steuerberater. Ihre Einwilligung zur Weitergabe können Sie jederzeit per Antwort auf diese E-Mail widerrufen.
+      <a href="${link}" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:15px;font-weight:700;">Anfrage bestätigen →</a>
+      ${lead.deadline ? `<p style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;color:#92400e;font-size:13px;margin:20px 0 0;">Ihre Investitionsfrist läuft bis zum <strong>${esc(lead.deadline)}</strong>. Maßgeblich ist die Lieferung, nicht die Bestellung.</p>` : ''}
+      <table style="width:100%;border-collapse:collapse;margin-top:20px;">
+        ${lead.amountLabel ? row('IAB-Betrag', esc(lead.amountLabel)) : ''}
+        ${(lead.extra ?? []).filter(([k]) => k !== 'Telefon-Einwilligung').map(([k, v]) => row(esc(k), esc(v))).join('')}
+      </table>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:20px 0 0;">
+        Sie haben nichts angefragt? Dann ignorieren Sie diese E-Mail, wir geben keine Daten weiter. Für Sie ist unser Service kostenlos, wir werden von den Anbietern vergütet. Wir beraten nicht in Steuerfragen; ob ein Wirtschaftsgut für Ihren IAB geeignet ist, klären Sie bitte mit Ihrem Steuerberater. Ihre Einwilligung können Sie jederzeit per Antwort auf diese E-Mail widerrufen.
       </p>
     `),
   })
@@ -290,7 +300,7 @@ export async function sendCalcReport(r: CalcReportMail): Promise<boolean> {
         ${r.rows.map(([k, v]) => row(esc(k), esc(v))).join('')}
       </table>
       <p style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:12px 16px;color:#065f46;font-size:13px;line-height:1.6;margin:16px 0;">${esc(r.hint)}</p>
-      <a href="${APP_URL}/angebote" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Passende Angebote ansehen →</a>
+      <a href="${APP_URL}/angebote" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:600;">Passende Projekte ansehen →</a>
       <p style="color:#64748b;font-size:12px;line-height:1.6;margin:16px 0 0;">
         Rechenhilfe, keine Steuerberatung. Der IAB ist eine Steuerstundung: Im Jahr der Investition wird er dem Gewinn wieder hinzugerechnet. Lassen Sie Ihre Situation von Ihrem Steuerberater prüfen.
       </p>

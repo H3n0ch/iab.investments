@@ -18,20 +18,20 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    t: 'Angebote ansehen',
-    d: 'Im Marktplatz sehen Sie alle Investitionsgüter, vom PV-Modulpaket über Batteriespeicher bis zum Tiny House. Alle Kategorien haben dieselben Eckdaten, damit Sie direkt vergleichen können. Unsicher, was passt? Über „Kontakt aufnehmen“ helfen wir bei der Suche nach der passenden Kategorie.',
+    t: 'Frist prüfen',
+    d: 'Mit dem Frist-Check oder dem IAB-Rechner sehen Sie, bis wann Sie investieren müssen, wie viel nötig ist und was eine Auflösung kosten würde.',
   },
   {
-    t: 'Kostenlos registrieren',
-    d: 'Mit einem kostenlosen Konto sehen Sie bei allen Angeboten Kennzahlen, Unterlagen und die vollständige Beschreibung. Ihre Daten geben wir erst weiter, wenn Sie ein Angebot ausdrücklich anfragen.',
+    t: 'Projekte ansehen',
+    d: 'Wir zeigen reale Projekte unserer Anbieter, vom PV-Modulpaket über Batteriespeicher bis zum Tiny House, mit einheitlichen Eckdaten. Kategorien, für die wir noch keinen Anbieter haben, zeigen ein klar gekennzeichnetes Beispiel.',
   },
   {
-    t: 'Anfrage senden',
-    d: 'Sie wählen eine oder mehrere Kategorien und senden eine kurze Anfrage. Wir melden uns bei Rückfragen persönlich und helfen Ihnen, die passende Kategorie zu finden, wenn Sie noch unsicher sind.',
+    t: 'Unterlagen anfordern',
+    d: 'Ein kurzes Formular in wenigen Schritten, kein Passwort. Projektdetails sehen Sie sofort. Nach Bestätigung Ihrer E-Mail-Adresse melden wir uns persönlich.',
   },
   {
-    t: 'Angebote direkt vom Anbieter',
-    d: 'Bis zu drei passende Anbieter melden sich mit konkreten Angeboten bei Ihnen. Details, Konditionen und Verträge besprechen Sie direkt mit dem Anbieter. Sie entscheiden in Ruhe, ob und mit wem Sie investieren.',
+    t: 'Kontakt zum passenden Anbieter',
+    d: 'Wir stellen den Kontakt zu dem Anbieter her, der zu Ihrem Betrag, Ihrer Frist und Ihrem Ziel passt. Details, Konditionen und Verträge besprechen Sie direkt mit ihm. Sie entscheiden in Ruhe, ob Sie investieren.',
   },
 ]
 
@@ -42,7 +42,7 @@ export default function SoFunktioniertsPage() {
 
   return (
     <>
-      <section className="bg-slate-900">
+      <section className="hero-under-header bg-slate-900">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / So funktioniert&apos;s
@@ -127,34 +127,24 @@ export default function SoFunktioniertsPage() {
         </section>
 
         <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Wie Anbieter auf unsere Plattform kommen</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Welche Anbieter wir zeigen</h2>
           <p className="mt-3">
-            Anbieter reichen ihre Produkte bei uns ein. Bevor ein Angebot online geht, sichten wir es: Ist es vollständig beschrieben?
-            Handelt es sich um ein bewegliches Wirtschaftsgut, das grundsätzlich für den IAB infrage kommt? Sind Preis, Standort und
-            Verfügbarkeit angegeben? Erst dann schalten wir es frei. Eine Empfehlung oder eine Prüfung der wirtschaftlichen Qualität ist
-            das ausdrücklich nicht.
-          </p>
-          <p className="mt-3">
-            Sie bieten selbst bewegliche Wirtschaftsgüter an? Dann können Sie Ihr Produkt{' '}
-            <Link href="/anbieter" className="font-medium text-emerald-700 underline underline-offset-2">
-              hier bei uns vorstellen
-            </Link>
-            .
+            Wir zeigen nur Projekte von Anbietern, die wir kennen und die der Darstellung zugestimmt haben. Wonach wir Anbieter auswählen,
+            haben wir offen beschrieben: <Link href="/anbieter#pruefkriterien" className="font-medium text-emerald-700 underline underline-offset-2">unsere
+            Prüfkriterien</Link>. Eine Empfehlung oder eine Prüfung der wirtschaftlichen Qualität eines einzelnen Projekts ist das ausdrücklich nicht.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">Kosten, Datenschutz und Konto</h2>
           <p className="mt-3">
-            Für Sie ist iab.investments kostenlos. Wir finanzieren uns über die Anbieter, an die wir Anfragen weitergeben. Ihre Daten
-            geben wir nur mit Ihrer ausdrücklichen Einwilligung weiter, und zwar an höchstens drei Anbieter der Kategorien, die Sie
-            gewählt haben. Die Einwilligung können Sie jederzeit per E-Mail widerrufen. Details stehen in unserer{' '}
+            Für Sie ist iab.investments kostenlos. Wir werden von den Anbietern vergütet, an die wir Anfragen vermitteln. Ihre Daten
+            geben wir nur mit Ihrer ausdrücklichen Einwilligung und nach Bestätigung Ihrer E-Mail-Adresse weiter, und zwar an ausgewählte
+            Anbieter der Kategorien, die Sie gewählt haben. Die Einwilligung können Sie jederzeit per E-Mail widerrufen. Details stehen in unserer{' '}
             <Link href="/datenschutz" className="font-medium text-emerald-700 underline underline-offset-2">Datenschutzerklärung</Link>.
           </p>
           <p className="mt-3">
-            Für eine Anfrage brauchen Sie kein Konto. Mit einem{' '}
-            <Link href="/registrieren" className="font-medium text-emerald-700 underline underline-offset-2">kostenlosen Konto</Link>{' '}
-            sehen Sie zusätzlich ausführliche Angebotsdetails, Kennzahlen und Unterlagen der Anbieter.
+            Sie brauchen kein Konto und kein Passwort. Nach Ihrer Anfrage sehen Sie die Details aller Projekte direkt in diesem Browser.
           </p>
         </section>
 
@@ -174,9 +164,9 @@ export default function SoFunktioniertsPage() {
 
         <section id="anfrage" className="scroll-mt-20">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-xl font-bold text-slate-900">Kostenlos Angebote erhalten</h2>
+            <h2 className="text-xl font-bold text-slate-900">Unterlagen & Kalkulation anfordern</h2>
             <p className="mb-4 mt-1 text-sm text-slate-500">
-              Wählen Sie die Kategorien, die Sie interessieren. Passende Anbieter melden sich bei Ihnen. Kostenlos und unverbindlich.
+              Wählen Sie, was Sie interessiert. Wir melden uns persönlich, kostenlos und unverbindlich.
             </p>
             <LeadForm preselected={[]} source="landing" />
           </div>

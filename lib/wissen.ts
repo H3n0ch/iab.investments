@@ -17,6 +17,8 @@ export type Article = {
   icon: string
   /** 'wissenswertes': broader investing/tax topics, listed separately in the hub and the footer */
   group?: 'wissenswertes'
+  /** Served at this root-level URL instead of /ratgeber/<slug> (keyword landing pages); old URL redirects */
+  path?: string
   /** Related category slugs – shown as cards and used to link category pages back */
   categories: string[]
   /** Related article slugs (including the static guides 'iab-frist' and 'iab-faq') */
@@ -248,7 +250,7 @@ export const ARTICLES: Article[] = [
         h: 'Sonderabschreibung und degressive AfA',
         p: [
           'Die Sonderabschreibung kann sowohl neben der linearen als auch neben der **degressiven Abschreibung** genutzt werden. Für bewegliche Wirtschaftsgüter, die zwischen dem 1.7.2025 und dem 31.12.2027 angeschafft werden, ist wieder eine degressive Abschreibung von bis zu 30 % möglich. In Kombination mit Sonderabschreibung und IAB kann der Abschreibungseffekt in den ersten Jahren sehr hoch ausfallen.',
-          'Was die degressive Abschreibung genau bedeutet und welche Fristen gelten, erklärt der Artikel [Degressive AfA und Investitions-Booster](/ratgeber/degressive-afa-investitionsbooster).',
+          'Was die degressive Abschreibung genau bedeutet und welche Fristen gelten, erklärt der Artikel [Degressive AfA und Investitions-Booster](/degressive-afa-bewegliche-wirtschaftsgueter).',
         ],
       },
       {
@@ -285,14 +287,15 @@ export const ARTICLES: Article[] = [
   // ─────────────────────────────────────────────────────────────
   {
     slug: 'degressive-afa-investitionsbooster',
-    title: 'Degressive AfA 2025 bis 2027: Investitions-Booster und IAB',
-    seoTitle: 'Degressive AfA 30 % (2025–2027): Investitions-Booster und IAB kombinieren',
+    path: '/degressive-afa-bewegliche-wirtschaftsgueter',
+    title: 'Degressive AfA 2025 und 2026 für bewegliche Wirtschaftsgüter',
+    seoTitle: 'Degressive AfA 2025 & 2026: 30 % für bewegliche Wirtschaftsgüter – mit Beispiel',
     description:
-      'Für bewegliche Wirtschaftsgüter, die vom 1.7.2025 bis 31.12.2027 angeschafft werden, gilt eine degressive AfA von bis zu 30 %. So wirkt sie zusammen mit IAB und Sonderabschreibung.',
+      'Degressive AfA 2025 und 2026: Für bewegliche Wirtschaftsgüter, angeschafft vom 1.7.2025 bis 31.12.2027, gilt bis zu 30 %. Beispielrechnung, Abgrenzung zu Gebäuden und Kombination mit IAB und Sonderabschreibung.',
     teaser: 'Bis Ende 2027 gilt eine degressive Abschreibung von bis zu 30 %. Was das für Ihre IAB-Planung bedeutet.',
     icon: '🚀',
-    categories: ['photovoltaik-iab', 'krypto-mining-hardware-iab', 'ladeinfrastruktur-iab'],
-    related: ['sonderabschreibung-7g', 'investitionsabzugsbetrag', 'iab-checkliste-jahresende', 'iab-frist'],
+    categories: ['photovoltaik-iab', 'batteriespeicher-iab', 'tiny-house-iab'],
+    related: ['sonderabschreibung-7g', 'bewegliche-wirtschaftsgueter', 'investitionsabzugsbetrag', 'iab-frist'],
     intro:
       'Mit dem steuerlichen Investitionssofortprogramm, oft „Investitions-Booster“ genannt, hat der Gesetzgeber 2025 die degressive Abschreibung für bewegliche Wirtschaftsgüter zurückgebracht. Sie gilt befristet bis Ende 2027. Für Unternehmer, die einen IAB gebildet haben, ist das ein zusätzlicher Grund, die Investition gut zu planen.',
     sections: [
@@ -309,6 +312,27 @@ export const ARTICLES: Article[] = [
           'Für bewegliche Wirtschaftsgüter des Anlagevermögens, die **nach dem 30.6.2025 und vor dem 1.1.2028** angeschafft oder hergestellt werden, darf degressiv abgeschrieben werden. Der Satz beträgt höchstens das Dreifache des linearen Satzes und **maximal 30 %**. Bei einer Nutzungsdauer von zehn Jahren sind das 30 % im ersten Jahr statt 10 %.',
           'Ein späterer Wechsel von der degressiven zur linearen Abschreibung ist zulässig, und zwar dann, wenn die lineare Abschreibung des Restwerts höher ausfällt. Ein Wechsel in die andere Richtung ist nicht möglich.',
           'Für Elektrofahrzeuge sieht das Programm eine eigene Sonderregel mit einer hohen Abschreibung im Anschaffungsjahr vor. Ob diese für Ihr Fahrzeug infrage kommt und wie sie sich mit anderen Abschreibungen verträgt, sollten Sie mit Ihrem Steuerberater klären.',
+        ],
+      },
+      {
+        h: 'Nur bewegliche Wirtschaftsgüter, keine Gebäude',
+        p: [
+          'Die 30-%-Regel gilt ausschließlich für **bewegliche Wirtschaftsgüter des Anlagevermögens**: Maschinen, Fahrzeuge, PV-Module, Batteriespeicher, mobile Tiny Houses, Container. Für Gebäude und Wohnungsneubau gibt es eine eigene, davon getrennte degressive AfA nach § 7 Abs. 5a EStG mit anderen Sätzen und Voraussetzungen. Um diese geht es hier nicht.',
+          'Was als beweglich gilt und wo die Grenze zu Gebäudebestandteilen verläuft, erklärt der Artikel [Bewegliche Wirtschaftsgüter](/ratgeber/bewegliche-wirtschaftsgueter).',
+        ],
+      },
+      {
+        h: 'Beispielrechnung: degressive AfA 2026',
+        p: [
+          'Ein Unternehmer kauft im Januar 2026 PV-Module für **100.000 € netto**, Nutzungsdauer laut AfA-Tabelle 20 Jahre. Linear wären das 5 % bzw. 5.000 € pro Jahr. Degressiv sind höchstens das Dreifache, also **15 %**, zulässig. Die 30-%-Grenze greift erst bei Nutzungsdauern von zehn Jahren und weniger.',
+        ],
+        list: [
+          '2026: 15 % von 100.000 € = **15.000 €** (linear: 5.000 €)',
+          '2027: 15 % vom Restwert 85.000 € = **12.750 €**',
+          '2028: 15 % vom Restwert 72.250 € = **10.838 €**',
+        ],
+        after: [
+          'In den ersten drei Jahren sind das rund 38.600 € statt 15.000 € Abschreibung. Hat der Unternehmer vorher einen IAB von 50.000 € gebildet, mindern sich die Anschaffungskosten auf 50.000 €, und die Prozentsätze wirken auf diesen Betrag, zusätzlich zur Sonderabschreibung von bis zu 40 %. Bei Anschaffung im Laufe des Jahres wird die AfA im ersten Jahr zeitanteilig gekürzt.',
         ],
       },
       {
@@ -645,7 +669,7 @@ export const ARTICLES: Article[] = [
       {
         h: '6. Steuerberater frühzeitig einbinden',
         p: [
-          'Ihr Steuerberater kennt Ihre Zahlen und kann einschätzen, ob die geplante Investition zu Ihrem Betrieb passt, wie sich IAB, [Sonderabschreibung](/ratgeber/sonderabschreibung-7g) und gegebenenfalls die [degressive Abschreibung](/ratgeber/degressive-afa-investitionsbooster) auswirken und ob eine Teilverwendung oder eine freiwillige Rückgängigmachung sinnvoller ist.',
+          'Ihr Steuerberater kennt Ihre Zahlen und kann einschätzen, ob die geplante Investition zu Ihrem Betrieb passt, wie sich IAB, [Sonderabschreibung](/ratgeber/sonderabschreibung-7g) und gegebenenfalls die [degressive Abschreibung](/degressive-afa-bewegliche-wirtschaftsgueter) auswirken und ob eine Teilverwendung oder eine freiwillige Rückgängigmachung sinnvoller ist.',
           'Wer früh plant, hat mehr Auswahl. Wer erst im Dezember sucht, muss oft nehmen, was noch lieferbar ist.',
         ],
       },
@@ -711,7 +735,7 @@ export const ARTICLES: Article[] = [
         h: 'Kosten und Abschreibung',
         p: [
           'Neben dem Kaufpreis fallen laufende Kosten an: Flächenpacht, Wartung, Versicherung, Direktvermarktung und Verwaltung. Bei Betreibermodellen sind diese Kosten oft in der Pacht verrechnet. Lassen Sie sich genau aufschlüsseln, was enthalten ist. Alle Beträge auf iab.investments sind netto.',
-          'PV-Anlagen werden laut amtlicher AfA-Tabelle in der Regel über **20 Jahre** abgeschrieben. Für bewegliche Wirtschaftsgüter, die zwischen Juli 2025 und Ende 2027 angeschafft werden, ist zusätzlich die [degressive Abschreibung von bis zu 30 %](/ratgeber/degressive-afa-investitionsbooster) möglich. Wie sich ein Investitionsabzugsbetrag auf eine PV-Investition auswirkt, lesen Sie im Artikel [IAB für Photovoltaik](/ratgeber/iab-photovoltaik).',
+          'PV-Anlagen werden laut amtlicher AfA-Tabelle in der Regel über **20 Jahre** abgeschrieben. Für bewegliche Wirtschaftsgüter, die zwischen Juli 2025 und Ende 2027 angeschafft werden, ist zusätzlich die [degressive Abschreibung von bis zu 30 %](/degressive-afa-bewegliche-wirtschaftsgueter) möglich. Wie sich ein Investitionsabzugsbetrag auf eine PV-Investition auswirkt, lesen Sie im Artikel [IAB für Photovoltaik](/iab-photovoltaik).',
         ],
       },
       {
@@ -730,7 +754,7 @@ export const ARTICLES: Article[] = [
       {
         h: 'PV-Angebote finden',
         p: [
-          'Im [Marktplatz](/angebote) finden Sie aktuelle Angebote für [PV-Direktinvestments](/photovoltaik-iab) mit Einstiegspreis und Eckdaten. Viele Anbieter kombinieren Module inzwischen mit [Batteriespeichern](/ratgeber/batteriespeicher-investment), um Strom in teure Abendstunden zu verschieben. Wir stellen den Kontakt zu Anbietern her und beraten nicht zu konkreten Angeboten.',
+          'Unter [Aktuelle Projekte](/angebote) finden Sie Projekte für [PV-Direktinvestments](/photovoltaik-iab) mit Einstiegspreis und Eckdaten. Viele Anbieter kombinieren Module inzwischen mit [Batteriespeichern](/ratgeber/batteriespeicher-investment), um Strom in teure Abendstunden zu verschieben. Wir stellen den Kontakt zu Anbietern her und beraten nicht zu konkreten Angeboten.',
         ],
       },
     ],
@@ -834,6 +858,7 @@ export const ARTICLES: Article[] = [
   // ─────────────────────────────────────────────────────────────
   {
     slug: 'iab-photovoltaik',
+    path: '/iab-photovoltaik',
     group: 'wissenswertes',
     title: 'IAB für Photovoltaik: Was Sie wissen sollten',
     seoTitle: 'IAB für Photovoltaik: Investitionsabzugsbetrag für PV-Anlagen nutzen',
@@ -997,7 +1022,7 @@ export const ARTICLES: Article[] = [
         list: [
           '**[Investitionsabzugsbetrag](/ratgeber/investitionsabzugsbetrag):** bis zu 50 % einer geplanten Investition vorab abziehen, sofern der Gewinn unter 200.000 € liegt.',
           '**[Sonderabschreibung](/ratgeber/sonderabschreibung-7g):** zusätzlich bis zu 40 % im Jahr der Anschaffung und den vier Folgejahren.',
-          '**[Degressive Abschreibung](/ratgeber/degressive-afa-investitionsbooster):** bis zu 30 % pro Jahr für bewegliche Wirtschaftsgüter, die von Juli 2025 bis Ende 2027 angeschafft werden.',
+          '**[Degressive Abschreibung](/degressive-afa-bewegliche-wirtschaftsgueter):** bis zu 30 % pro Jahr für bewegliche Wirtschaftsgüter, die von Juli 2025 bis Ende 2027 angeschafft werden.',
           '**Altersvorsorge:** Basisrente und für GmbH-Geschäftsführer die betriebliche Altersvorsorge.',
         ],
         after: [
@@ -1077,7 +1102,7 @@ export const ARTICLES: Article[] = [
         list: [
           '**[Investitionsabzugsbetrag](/ratgeber/investitionsabzugsbetrag):** bis zu 50 % einer geplanten Investition schon vor dem Kauf abziehen.',
           '**[Sonderabschreibung](/ratgeber/sonderabschreibung-7g):** bis zu 40 % zusätzlich im Jahr der Anschaffung und den Folgejahren.',
-          '**[Degressive AfA](/ratgeber/degressive-afa-investitionsbooster):** höhere Abschreibung in den ersten Jahren für Anschaffungen bis Ende 2027.',
+          '**[Degressive AfA](/degressive-afa-bewegliche-wirtschaftsgueter):** höhere Abschreibung in den ersten Jahren für Anschaffungen bis Ende 2027.',
         ],
         after: [
           'Der Effekt ist eine Steuerstundung: Die Steuer fällt später an. Dauerhaft sparen Sie, wenn der spätere Steuersatz niedriger ist, etwa weil der Gewinn sinkt oder Sie in den Ruhestand gehen. Bei gleichbleibend hohem Einkommen bleibt vor allem der Liquiditätsvorteil.',
@@ -1106,6 +1131,73 @@ export const ARTICLES: Article[] = [
       },
     ],
   },
+
+  // ─────────────────────────────────────────────────────────────
+  {
+    slug: 'solarpark-anteile-kaufen',
+    path: '/solarpark-anteile-kaufen',
+    group: 'wissenswertes',
+    title: 'Solarpark kaufen oder Anteile erwerben: Direktinvestment, Fonds oder Aktie?',
+    seoTitle: 'Solarpark kaufen & Anteile kaufen: Direktinvestment, Fonds oder Aktie im Vergleich',
+    description:
+      'Solarpark kaufen oder Anteile an einem Solarpark erwerben: Unterschiede zwischen PV-Direktinvestment, Fondsbeteiligung und Solar-Aktie, Kosten, Erträge und wann der IAB möglich ist.',
+    teaser: 'Eigene Module im Solarpark, Fondsanteil oder Aktie: Was Sie wirklich besitzen und wann der IAB greift.',
+    icon: '🏞️',
+    categories: ['photovoltaik-iab', 'batteriespeicher-iab'],
+    related: ['iab-photovoltaik', 'photovoltaik-investment', 'iab-direktinvestment-betreibermodell', 'iab-frist'],
+    intro:
+      'Einen ganzen Solarpark kaufen nur wenige. Wer in Solarparks investieren will, hat drei Wege: eigene PV-Module in einem Park als **Direktinvestment**, eine **Beteiligung** an einer Solarpark-Gesellschaft oder **Aktien** eines Solarpark-Betreibers. Für Unternehmer mit Investitionsabzugsbetrag macht der Unterschied viel aus, denn nur einer der drei Wege führt zu einem eigenen beweglichen Wirtschaftsgut.',
+    sections: [
+      {
+        h: 'Drei Wege, in einen Solarpark zu investieren',
+        p: ['Der wichtigste Unterschied ist, was Ihnen am Ende gehört:'],
+        list: [
+          '**PV-Direktinvestment:** Sie kaufen eine bestimmte Anzahl Module in einem Solarpark und werden Eigentümer. Ein Betreiber übernimmt Betrieb, Wartung und Stromvermarktung, Sie erhalten die Erlöse Ihrer Module abzüglich der Betriebskosten.',
+          '**Beteiligung an einer Solarpark-Gesellschaft:** Sie werden Kommanditist oder Anleger eines Fonds. Ihnen gehört ein Anteil an der Gesellschaft, nicht die Module selbst.',
+          '**Solar-Aktie:** Sie kaufen Aktien eines börsennotierten Betreibers wie 7C Solarparken. Der Kurs schwankt mit dem Markt, Dividenden sind nicht garantiert.',
+        ],
+      },
+      {
+        h: 'Wann der IAB beim Solarpark möglich ist',
+        p: [
+          'Ein Investitionsabzugsbetrag setzt ein **eigenes bewegliches Wirtschaftsgut** im Betriebsvermögen voraus, das im Jahr der Anschaffung und im Folgejahr fast ausschließlich betrieblich genutzt wird. Das erfüllt das **Direktinvestment in Module**: PV-Module in einem Freiflächenpark sind bewegliche Wirtschaftsgüter, und der Betrieb zur Stromerzeugung ist eine gewerbliche Tätigkeit.',
+          'Bei Fondsanteilen und Aktien kaufen Sie dagegen eine Beteiligung bzw. ein Wertpapier. Dafür können Sie selbst **keinen IAB** nutzen. Wie das Betreibermodell aufgesetzt sein muss, erklärt der Artikel [Direktinvestment und Betreibermodell](/ratgeber/iab-direktinvestment-betreibermodell). Die Steuerwirkung für PV im Detail zeigt [IAB für Photovoltaik](/iab-photovoltaik).',
+        ],
+      },
+      {
+        h: 'Was ein Solarpark-Anteil kostet',
+        p: [
+          'PV-Direktinvestments starten bei vielen Anbietern bei etwa **25.000 bis 50.000 € netto** für ein Modulpaket. Größere Tickets ab 200.000 € sind oft individuell verhandelbar, etwa mit eigenem Teilfeld. Fondsbeteiligungen beginnen meist bei 5.000 bis 10.000 €, Aktien schon mit einem Stück.',
+          'Für den IAB gilt: Er beträgt höchstens 50 % der Anschaffungskosten. Wer einen IAB von 25.000 € voll nutzen will, braucht ein Modulpaket von mindestens 50.000 € netto.',
+        ],
+      },
+      {
+        h: 'Worauf Sie vor dem Kauf achten sollten',
+        p: ['Prüfen Sie bei einem Direktinvestment vor allem diese Punkte, idealerweise gemeinsam mit Ihrem Steuerberater:'],
+        list: [
+          'Eigentum: Werden Ihnen bestimmte Module konkret zugeordnet (Seriennummern, Lageplan)?',
+          'Betreibervertrag: Laufzeit, Kosten, Rückkaufoption, Regelung bei Insolvenz des Betreibers',
+          'Erlöse: EEG-Vergütung, Direktvermarktung oder Stromabnahmevertrag, und wie realistisch die Ertragsprognose ist',
+          'Fläche: gesicherte Pacht für die gesamte Laufzeit',
+          'Lieferung: Wann geht das wirtschaftliche Eigentum über? Für die IAB-Frist zählt dieses Datum.',
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: 'Kann ich einen ganzen Solarpark kaufen?',
+        a: 'Ja, Bestandsparks und Projektrechte werden gehandelt, meist ab mehreren Millionen Euro. Für die meisten Unternehmer ist ein Modulpaket in einem Park als Direktinvestment der passendere Einstieg.',
+      },
+      {
+        q: 'Solarpark-Direktinvestment oder Aktien kaufen: was ist besser?',
+        a: 'Das hängt vom Ziel ab. Aktien sind jederzeit handelbar, schwanken aber und bringen keinen IAB. Das Direktinvestment ist langfristig gebunden, macht Sie zum Eigentümer der Module und kann mit IAB und Sonderabschreibung kombiniert werden.',
+      },
+      {
+        q: 'Welche Rendite bringt ein Solarpark-Anteil?',
+        a: 'Anbieter nennen für Direktinvestments häufig 4 bis 7 % pro Jahr vor Steuern. Das sind Prognosen der Anbieter, keine Garantie. Entscheidend sind Strompreis, Vermarktungsvertrag und Betriebskosten.',
+      },
+    ],
+  },
 ]
 
 /** The two hand-built guides under /ratgeber, listed in the hub and in related links */
@@ -1126,8 +1218,12 @@ export const STATIC_GUIDES: { slug: string; title: string; teaser: string; icon:
 
 export type GuideLink = { slug: string; title: string; teaser: string; icon: string; href: string }
 
+export function articlePath(a: Article): string {
+  return a.path ?? `/ratgeber/${a.slug}`
+}
+
 function toLink(a: Article): GuideLink {
-  return { slug: a.slug, title: a.title, teaser: a.teaser, icon: a.icon, href: `/ratgeber/${a.slug}` }
+  return { slug: a.slug, title: a.title, teaser: a.teaser, icon: a.icon, href: articlePath(a) }
 }
 
 /** IAB guides (core knowledge) – without the "Wissenswertes" topics */

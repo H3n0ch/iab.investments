@@ -10,6 +10,24 @@ export const AMOUNTS = [
 ] as const
 export type AmountValue = (typeof AMOUNTS)[number]['value']
 
+/** Planned budget, asked in the inquiry wizard. Above 200.000 € the lead goes to commission partners. */
+export const BUDGETS = [
+  { value: 'lt50', label: 'bis 50.000 €' },
+  { value: '50-100', label: '50.000 – 100.000 €' },
+  { value: '100-200', label: '100.000 – 200.000 €' },
+  { value: 'gt200', label: 'über 200.000 €' },
+] as const
+export type BudgetValue = (typeof BUDGETS)[number]['value']
+export const isValidBudget = (v: unknown): v is BudgetValue => BUDGETS.some((b) => b.value === v)
+
+/** Landowner inquiry (/solarpark-flaeche-verpachten) */
+export const LAND_TYPES = [
+  { value: 'acker', label: 'Ackerland' },
+  { value: 'gruenland', label: 'Grünland' },
+  { value: 'konversion', label: 'Konversionsfläche / Brache' },
+  { value: 'sonstige', label: 'Sonstige' },
+] as const
+
 /** Asked in offer inquiries and the calculator – lets buyers price leads by segment */
 export const LEGAL_FORMS = [
   { value: 'einzelunternehmen', label: 'Einzelunternehmen' },
@@ -45,6 +63,14 @@ export function amountBucket(iab: number): AmountValue {
 export function iabYears(now = new Date()): number[] {
   const y = now.getFullYear()
   return [y - 3, y - 2, y - 1, y]
+}
+
+/** Formation years with their own deadline page (app/iab-<year>-frist). Add a folder + the year once a year. */
+export const FRIST_PAGE_YEARS = [2023, 2024] as const
+
+/** Deadline page of a vintage, falling back to the general page */
+export function fristPath(year: number): string {
+  return (FRIST_PAGE_YEARS as readonly number[]).includes(year) ? `/iab-${year}-frist` : '/iab-aufloesen'
 }
 
 export function iabDeadline(year: number): Date {

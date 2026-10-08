@@ -1,71 +1,27 @@
-import { createOffer, deleteOffer, setOfferPublished } from '@/lib/actions/admin'
+import Link from 'next/link'
+import { OfferForm, type EditableOffer } from '@/components/admin/OfferForm'
+import { deleteOffer, setOfferPublished } from '@/lib/actions/admin'
 import { requireAdmin } from '@/lib/admin-auth'
-import { CATEGORIES, formatEuro } from '@/lib/categories'
-import { COUNTRIES } from '@/lib/countries'
+import { formatEuro } from '@/lib/categories'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import type { Offer } from '@/lib/supabase/types'
 
-const input = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500'
-
-export default async function AdminOffersPage() {
+export default async function AdminOffersPage({ searchParams }: PageProps<'/admin/offers'>) {
   await requireAdmin()
+  const { edit } = await searchParams
   const { data, error } = await getSupabaseAdmin()
     .from('offers')
     .select('*, categories(slug, name)')
     .order('created_at', { ascending: false })
 
-  const offers = (data ?? []) as (Offer & { categories: { slug: string; name: string } | null })[]
+  const offers = (data ?? []) as EditableOffer[]
+  const editing = typeof edit === 'string' ? offers.find((o) => o.id === edit) : undefined
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-6">
       <h1 className="text-lg font-bold text-slate-900">Angebote</h1>
 
-      <form action={createOffer} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
-        <p className="text-sm font-semibold text-slate-900 sm:col-span-2">Neues Angebot</p>
-        <select name="category" required className={input}>
-          {CATEGORIES.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.icon} {c.name}
-            </option>
-          ))}
-        </select>
-        <input name="title" required placeholder="Titel *" className={input} />
-        <input name="location" placeholder="Standort, z. B. Brandenburg" className={input} />
-        <select name="country" defaultValue={'DE'} className={input}>
-          {COUNTRIES.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <input name="min_investment" inputMode="decimal" placeholder="Mindestinvestment in € (z. B. 25000)" className={input} />
-        <input name="expected_yield" placeholder='Ertrag, z. B. "ca. 6 % p.a. laut Anbieter"' className={input} />
-        <input name="availability" placeholder="Verfügbarkeit, z. B. Lieferung bis Dez." className={input} />
-        <input name="image_url" type="url" placeholder="Bild-URL (optional)" className={input} />
-        <input name="provider_name" placeholder="Anbieter (intern, nicht öffentlich)" className={input} />
-        <textarea name="description" rows={2} placeholder="Kurzbeschreibung (öffentlich)" className={`${input} sm:col-span-2`} />
-        <textarea name="gallery" rows={2} placeholder="Weitere Bild-URLs für die Galerie (eine pro Zeile, öffentlich)" className={`${input} sm:col-span-2`} />
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 sm:col-span-2">Nur für registrierte Nutzer 🔒</p>
-        <textarea name="details" rows={5} placeholder="Ausführliche Beschreibung" className={`${input} sm:col-span-2`} />
-        <textarea
-          name="facts"
-          rows={4}
-          placeholder={'Kennzahlen, eine pro Zeile im Format „Bezeichnung: Wert“, z. B.\nVertragslaufzeit: 10 Jahre\nRückkaufoption: ja'}
-          className={input}
-        />
-        <textarea
-          name="documents"
-          rows={4}
-          placeholder={'Unterlagen, eine pro Zeile im Format „Bezeichnung | URL“, z. B.\nExposé | https://…/expose.pdf'}
-          className={input}
-        />
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input type="checkbox" name="is_published" className="h-4 w-4 accent-emerald-600" /> Sofort veröffentlichen
-        </label>
-        <button type="submit" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 sm:justify-self-end">
-          Anlegen
-        </button>
-      </form>
+      {/* Keyed: switching between offers must reset the chosen category and its data sheet fields */}
+      <OfferForm key={editing?.id ?? 'new'} offer={editing} />
 
       {error && <p className="text-sm text-red-600">Angebote konnten nicht geladen werden: {error.message}</p>}
 
@@ -109,8 +65,11 @@ export default async function AdminOffersPage() {
                         </button>
                       </form>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <form action={deleteOffer.bind(null, o.id, slug)}>
+                    <td className="space-x-3 px-4 py-3 text-right">
+                      <Link href={`/admin/offers?edit=${o.id}`} className="text-xs font-semibold text-slate-700 hover:underline">
+                        Bearbeiten
+                      </Link>
+                      <form action={deleteOffer.bind(null, o.id, slug)} className="inline">
                         <button type="submit" className="text-xs text-red-500 hover:underline">
                           Löschen
                         </button>

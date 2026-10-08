@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CONSENT_CALL_TEXT, CONSENT_SHARE_TEXT, CONSENT_VERSION, offerShareText } from '@/lib/consent'
+import { CONSENT_CALL_TEXT, CONSENT_SHARE_TEXT, CONSENT_VERSION, LAND_SHARE_TEXT, offerShareText } from '@/lib/consent'
 
 export const metadata: Metadata = { title: 'Datenschutz', robots: { index: false } }
 
@@ -17,11 +17,15 @@ export default function DatenschutzPage() {
         <section>
           <h2 className="font-bold text-slate-900">2. Anfrage- und Kontaktformular</h2>
           <p>
-            Wenn Sie über unser Formular eine Anfrage senden, verarbeiten wir Name, E-Mail-Adresse, optional Telefonnummer und Firma
-            sowie gegebenenfalls Ihre Angaben zum IAB (Betragsspanne, Jahr der Bildung, Ziel), die gewählten Kategorien und Ihre
-            Nachricht. Zum Nachweis
-            Ihrer Einwilligung speichern wir außerdem Zeitpunkt, Version des Einwilligungstextes und den Browser-Kennzeichner
-            (User-Agent).
+            Wenn Sie über unser Formular eine Anfrage senden, verarbeiten wir Name, E-Mail-Adresse, Telefonnummer, optional Firma und
+            Rechtsform sowie Ihre Angaben zum IAB (Betrag, Jahr der Bildung), Budget, geplanten Zeitpunkt, die gewählten Kategorien und
+            gegebenenfalls Ihre Nachricht. Bei Flächenangeboten für Solarparks zusätzlich Größe, Postleitzahl und Art der Fläche. Zum
+            Nachweis Ihrer Einwilligung speichern wir außerdem Zeitpunkt, Version des Einwilligungstextes, die Seite, auf der Sie die Anfrage
+            gestellt haben, Kampagnen-Kennzeichen (z. B. utm_source, gclid) und den Browser-Kennzeichner (User-Agent).
+          </p>
+          <p className="mt-2">
+            <strong>Double-Opt-in:</strong> Nach dem Absenden erhalten Sie eine E-Mail mit einem Bestätigungslink. Erst nach Ihrer Bestätigung
+            geben wir Ihre Angaben an Anbieter weiter. Den Zeitpunkt der Bestätigung speichern wir als Nachweis.
           </p>
           <p className="mt-2">Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung) sowie Art. 6 Abs. 1 lit. b DSGVO (vorvertragliche Maßnahmen).</p>
         </section>
@@ -41,14 +45,16 @@ export default function DatenschutzPage() {
         <section>
           <h2 className="font-bold text-slate-900">3. Weitergabe an Anbieter</h2>
           <p>
-            Nur mit Ihrer ausdrücklichen Einwilligung geben wir Ihre Angaben an Anbieter weiter. Bei einer allgemeinen Anfrage sind das bis zu
-            drei Anbieter der von Ihnen gewählten Kategorien, bei der Anfrage zu einem konkreten Angebot nur dessen Anbieter. Der Wortlaut der
-            Einwilligungen (Version {CONSENT_VERSION}) lautet:
+            Nur mit Ihrer ausdrücklichen Einwilligung und nach Bestätigung Ihrer E-Mail-Adresse geben wir Ihre Angaben an Anbieter weiter. Bei
+            einer allgemeinen Anfrage sind das ausgewählte Anbieter der von Ihnen gewählten Kategorien, bei der Anfrage zu einem konkreten
+            Projekt nur dessen Anbieter, bei Flächenangeboten ausgewählte Solarpark-Projektierer. Für die Vermittlung erhalten wir von den
+            Anbietern eine Vergütung. Der Wortlaut der Einwilligungen (Version {CONSENT_VERSION}) lautet:
           </p>
           <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{CONSENT_SHARE_TEXT}</blockquote>
           <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">
             {offerShareText('[Name des Angebots]', '[Kategorie]')}
           </blockquote>
+          <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{LAND_SHARE_TEXT}</blockquote>
           <p className="mt-2">Für Rückrufe holen wir eine gesonderte Einwilligung ein:</p>
           <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{CONSENT_CALL_TEXT}</blockquote>
           <p className="mt-2">Den genauen Wortlaut, dem Sie zugestimmt haben, speichern wir zusammen mit Zeitpunkt und Version als Nachweis.</p>
@@ -77,7 +83,18 @@ export default function DatenschutzPage() {
             <li>Hosting: Netlify, Inc. [Standort / Standardvertragsklauseln prüfen]</li>
             <li>Datenbank: Supabase (Region Frankfurt, EU)</li>
             <li>E-Mail-Versand: Resend [Standort / Standardvertragsklauseln prüfen]</li>
+            <li>Reichweitenmessung: Plausible Insights OÜ, Estland (EU)</li>
           </ul>
+        </section>
+
+        <section>
+          <h2 className="font-bold text-slate-900">6a. Reichweitenmessung ohne Cookies</h2>
+          <p>
+            Um zu verstehen, welche Seiten und Rechner hilfreich sind, nutzen wir Plausible Analytics. Plausible setzt keine Cookies und speichert
+            keine personenbezogenen Daten; IP-Adressen werden nur gekürzt und gehasht verarbeitet und nach 24 Stunden verworfen. Erfasst werden
+            Seitenaufrufe sowie anonyme Ereignisse wie die Nutzung des Frist-Checks oder das Absenden eines Formulars. Rechtsgrundlage:
+            Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer bedarfsgerechten Gestaltung der Website).
+          </p>
         </section>
 
         <section>

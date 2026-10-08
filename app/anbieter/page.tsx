@@ -7,9 +7,9 @@ import type { FaqItem } from '@/lib/faq'
 import { formatDeadline, iabYears } from '@/lib/iab'
 
 export const metadata: Metadata = {
-  title: 'Für Anbieter: Investitionsgüter für IAB-Investoren vorstellen',
+  title: 'Für Anbieter: qualifizierte Anfragen von Unternehmern mit IAB',
   description:
-    'Sie bieten bewegliche Wirtschaftsgüter für den Investitionsabzugsbetrag an? Stellen Sie Ihr Produkt auf iab.investments vor und erreichen Sie Unternehmer mit auslaufendem IAB.',
+    'Sie bieten bewegliche Wirtschaftsgüter für den Investitionsabzugsbetrag an? Erhalten Sie qualifizierte Anfragen von Unternehmern mit IAB-Frist: mit Budget, Frist und bestätigter E-Mail.',
   alternates: { canonical: '/anbieter' },
 }
 
@@ -20,7 +20,7 @@ const PROVIDER_FAQ: FaqItem[] = [
   },
   {
     q: 'Was kostet die Vorstellung meines Produkts?',
-    a: 'Die Einreichung ist kostenlos und unverbindlich. Die Konditionen für die Vermittlung von Anfragen besprechen wir nach der Sichtung persönlich mit Ihnen.',
+    a: 'Die Vorstellung ist kostenlos. Wir werden pro vermittelter Anfrage vergütet, bei großen Tickets alternativ über eine Provision bei Abschluss. Die Konditionen besprechen wir persönlich mit Ihnen.',
   },
   {
     q: 'Wie lange dauert die Freischaltung?',
@@ -28,11 +28,11 @@ const PROVIDER_FAQ: FaqItem[] = [
   },
   {
     q: 'Welche Angaben werden öffentlich angezeigt?',
-    a: 'Öffentlich sichtbar sind Titel, Kurzbeschreibung, Standort, Mindestinvestition (netto), Verfügbarkeit, Ertragsangabe und Bilder. Ausführliche Beschreibung, Kennzahlen und Unterlagen sehen nur registrierte Nutzer. Ihr Firmenname wird nicht öffentlich angezeigt.',
+    a: 'Öffentlich sichtbar sind Titel, Kurzbeschreibung, Standort, Mindestinvestition (netto), Verfügbarkeit, Ertragsangabe und Bilder. Ausführliche Beschreibung, Kennzahlen und Unterlagen sehen Interessenten erst nach ihrer Anfrage. Ihr Firmenname wird nicht öffentlich angezeigt.',
   },
   {
     q: 'Wie erhalte ich Anfragen?',
-    a: 'Interessenten wählen Kategorien oder konkrete Angebote und willigen ausdrücklich in die Weitergabe ihrer Kontaktdaten an bis zu drei Anbieter ein. Wir leiten passende Anfragen an Sie weiter, und Sie nehmen direkt Kontakt auf.',
+    a: 'Interessenten geben im Formular IAB-Betrag, Frist, Budget und Zeitpunkt an, willigen ausdrücklich in die Weitergabe ein und bestätigen ihre E-Mail-Adresse. Wir sprechen kurz mit ihnen und leiten passende Anfragen an Sie weiter. Sie nehmen dann direkt Kontakt auf.',
   },
 ]
 
@@ -41,7 +41,7 @@ export default function AnbieterPage() {
 
   return (
     <>
-      <section className="bg-slate-900">
+      <section className="hero-under-header bg-slate-900">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / Für Anbieter
@@ -69,8 +69,8 @@ export default function AnbieterPage() {
             klaren Anlass, einem ungefähren Budget und einer festen Frist.
           </p>
           <p className="mt-3">
-            Interessenten registrieren sich, sehen sich Angebote im Detail an und fragen gezielt an. Mit jeder Anfrage erhalten Sie
-            Kontaktdaten und die gewünschte Kategorie bzw. das angefragte Angebot. Alle
+            Interessenten fordern Unterlagen zu einer Kategorie oder einem konkreten Projekt an. Mit jeder Anfrage erhalten Sie Kontaktdaten,
+            IAB-Betrag, Frist, Budget und geplanten Zeitpunkt, mit bestätigter E-Mail-Adresse und Einwilligung zur Weitergabe. Alle
             Beträge auf unserer Seite sind Nettobeträge, denn unsere Zielgruppe sind ausschließlich Unternehmer.
           </p>
         </section>
@@ -95,8 +95,8 @@ export default function AnbieterPage() {
           </ol>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Was wir von Anbietern erwarten</h2>
+        <section id="pruefkriterien" className="scroll-mt-20">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Unsere Prüfkriterien für Anbieter</h2>
           <p className="mt-3">
             Unsere Besucher vertrauen darauf, dass die Angebote auf iab.investments zu ihrem Anliegen passen. Deshalb schalten wir nur
             Produkte frei, die einige Grundanforderungen erfüllen:
@@ -113,6 +113,8 @@ export default function AnbieterPage() {
             <li>Lieferzeit und Übergabe sind verbindlich geregelt, damit Kunden ihre IAB-Frist einhalten können.</li>
             <li>Bei Betreibermodellen deckt der Miet- oder Betreibervertrag mindestens die steuerliche Bindungsfrist ab.</li>
             <li>Kunden erhalten vollständige Unterlagen für ihre Buchhaltung und ihren Steuerberater.</li>
+            <li>Wir zeigen nur Projekte, deren Darstellung mit Zahlen Sie freigegeben haben. Keine erfundenen Projekte, Zahlen oder Bewertungen.</li>
+            <li>Referenzen oder bereits umgesetzte Projekte können Sie uns auf Nachfrage nennen.</li>
           </ul>
           <p className="mt-3">
             Welche Fragen Investoren typischerweise stellen, lesen Sie in unserem Artikel{' '}

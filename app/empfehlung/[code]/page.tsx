@@ -36,7 +36,7 @@ export default async function EmpfehlungPage({ params }: PageProps<'/empfehlung/
 
   return (
     <>
-      <section className="bg-slate-900">
+      <section className="hero-under-header bg-slate-900">
         <div className="mx-auto max-w-3xl px-4 py-12 sm:py-14">
           {partner && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-400/30">
@@ -61,7 +61,7 @@ export default async function EmpfehlungPage({ params }: PageProps<'/empfehlung/
 
         <div className="grid gap-3 text-sm sm:grid-cols-3">
           <Link href="/angebote" className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-500">
-            <span className="font-semibold text-slate-900">Marktplatz ansehen</span>
+            <span className="font-semibold text-slate-900">Projekte ansehen</span>
             <span className="mt-1 block text-slate-500">Alle aktuellen Projekte nach Investitionsgut.</span>
           </Link>
           <Link href="/iab-rechner" className="rounded-xl border border-slate-200 bg-white p-4 hover:border-emerald-500">

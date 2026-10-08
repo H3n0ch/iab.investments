@@ -4,9 +4,9 @@
 // instead of investor groups; claims/recycling removed.
 
 import { useState, useTransition } from 'react'
-import { addLeadActivity, updateLeadCRM, updateLeadStatus } from '@/lib/actions/admin'
+import { addLeadActivity, deleteLead, updateLeadCRM, updateLeadStatus } from '@/lib/actions/admin'
 import { formatEuro, GOALS } from '@/lib/categories'
-import { AMOUNTS, investTimings, LEGAL_FORMS } from '@/lib/iab'
+import { AMOUNTS, BUDGETS, investTimings, LAND_TYPES, LEGAL_FORMS } from '@/lib/iab'
 import type { Lead, LeadActivity, LeadStatus } from '@/lib/supabase/types'
 
 const PAGE_SIZE = 25
@@ -27,7 +27,14 @@ const SOURCE_BADGES: Record<string, { label: string; color: string }> = {
   rechner: { label: 'IAB-Rechner', color: 'border-violet-200 bg-violet-50 text-violet-700' },
   frist: { label: '🔥 Frist-Lead', color: 'border-red-200 bg-red-50 text-red-700' },
   angebot: { label: '🎯 Angebotsanfrage', color: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  ratgeber: { label: 'Ratgeber', color: 'border-teal-200 bg-teal-50 text-teal-700' },
+  flaeche: { label: '🌾 Fläche', color: 'border-lime-300 bg-lime-50 text-lime-800' },
 }
+
+type DoiFilter = '' | 'bestaetigt' | 'offen'
+/** Leads from the inquiry forms carry a DOI token; registrations, contact and calculator leads don't need one */
+const needsDoi = (l: Lead) => l.consent_share
+const doiOk = (l: Lead) => Boolean(l.doi_confirmed_at)
 
 const CHANNELS = [
   { value: 'anruf', label: '📞 Anruf' },
@@ -108,10 +115,14 @@ export function LeadsCRM({
   const [selectedId, setSelectedId] = useState<string | null>(initialId ?? leads[0]?.id ?? null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LeadStatus | ''>('')
+  const [doiFilter, setDoiFilter] = useState<DoiFilter>('')
   const [visible, setVisible] = useState(PAGE_SIZE)
 
   const filtered = leads.filter((l) => {
     if (statusFilter && l.status !== statusFilter) return false
+    // „Verkaufbar“ = consent to share + confirmed e-mail
+    if (doiFilter === 'bestaetigt' && !(needsDoi(l) && doiOk(l))) return false
+    if (doiFilter === 'offen' && !(needsDoi(l) && !doiOk(l))) return false
     if (search) {
       const s = search.toLowerCase()
       return (
@@ -134,7 +145,7 @@ export function LeadsCRM({
     <div className="flex h-[calc(100vh-56px)] flex-col overflow-hidden">
       <div className="shrink-0 border-b border-slate-200 bg-white px-6 py-4">
         <h1 className="mb-3 text-lg font-bold text-slate-900">CRM · Leads</h1>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {stats.map((s) => (
             <div key={s.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
               <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
@@ -173,6 +184,18 @@ export function LeadsCRM({
                 </option>
               ))}
             </select>
+            <select
+              value={doiFilter}
+              onChange={(e) => {
+                setDoiFilter(e.target.value as DoiFilter)
+                setVisible(PAGE_SIZE)
+              }}
+              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none"
+            >
+              <option value="">Alle (Double-Opt-in)</option>
+              <option value="bestaetigt">✓ Bestätigt = verkaufbar</option>
+              <option value="offen">Bestätigung offen</option>
+            </select>
           </div>
 
           <div className="flex-1 divide-y divide-slate-100 overflow-y-auto">
@@ -196,6 +219,17 @@ export function LeadsCRM({
                       {l.source && SOURCE_BADGES[l.source] && (
                         <span className={`rounded-full border px-1.5 py-px text-[9px] font-medium ${SOURCE_BADGES[l.source].color}`}>
                           {SOURCE_BADGES[l.source].label}
+                        </span>
+                      )}
+                      {needsDoi(l) &&
+                        (doiOk(l) ? (
+                          <span className="text-[9px] font-semibold text-emerald-600" title="E-Mail bestätigt">✓ DOI</span>
+                        ) : (
+                          <span className="text-[9px] font-medium text-slate-400" title="E-Mail noch nicht bestätigt">DOI offen</span>
+                        ))}
+                      {l.budget === 'gt200' && (
+                        <span className="rounded-full bg-amber-400 px-1.5 py-px text-[9px] font-bold text-amber-950" title="Budget über 200.000 €: Provisionspartner">
+                          💰 200k+
                         </span>
                       )}
                       {l.user_id && views[l.user_id]?.length > 0 && (
@@ -268,14 +302,25 @@ function LeadDetail({ lead, activities, views }: { lead: LeadRow; activities: Le
     ['Rechtsform', LEGAL_FORMS.find((f) => f.value === lead.legal_form)?.label ?? null],
     ['Investition', lead.investment_cents != null ? `${formatEuro(lead.investment_cents / 100)} netto` : null],
     ['Zeitpunkt', investTimings(new Date(lead.created_at)).find((t) => t.value === lead.invest_timing)?.label ?? null],
-    ['IAB-Betrag', AMOUNTS.find((a) => a.value === lead.iab_amount)?.label ?? null],
+    [
+      'IAB-Betrag',
+      lead.iab_amount_eur != null
+        ? lead.iab_amount_eur > 0
+          ? formatEuro(lead.iab_amount_eur)
+          : 'noch kein IAB'
+        : AMOUNTS.find((a) => a.value === lead.iab_amount)?.label ?? null,
+    ],
+    ['Budget', BUDGETS.find((b) => b.value === lead.budget)?.label ?? null],
     ['Gebildet für', lead.iab_year ? `WJ ${lead.iab_year}` : null],
     ['Frist', lead.iab_deadline ? new Date(lead.iab_deadline).toLocaleDateString('de-DE') : null],
     ['Ziel', GOALS.find((g) => g.value === lead.goal)?.label ?? null],
     ['Kategorien', catNames(lead).join(', ') || null],
+    ['Fläche', lead.lead_type === 'flaeche' ? [lead.land_area_ha != null ? `${lead.land_area_ha.toLocaleString('de-DE')} ha` : null, lead.land_plz, LAND_TYPES.find((t) => t.value === lead.land_type)?.label].filter(Boolean).join(' · ') : null],
+    ['Kampagne', [lead.utm_medium, lead.utm_campaign, lead.gclid ? 'Google Ads' : null].filter(Boolean).join(' · ') || null],
     ['Quelle', [SOURCE_BADGES[lead.source ?? '']?.label ?? lead.source, lead.landing_path, lead.utm_source].filter(Boolean).join(' · ') || null],
     ['Einwilligung', lead.consent_at ? `${fmtDateTime(lead.consent_at)} · ${lead.consent_text_version}` : null],
     ['Anruf', lead.consent_call ? 'Einwilligung erteilt' : 'keine Einwilligung'],
+    ['Double-Opt-in', needsDoi(lead) ? (lead.doi_confirmed_at ? `bestätigt ${fmtDateTime(lead.doi_confirmed_at)}` : 'noch nicht bestätigt – nicht weitergeben') : null],
   ]
 
   return (
@@ -316,6 +361,17 @@ function LeadDetail({ lead, activities, views }: { lead: LeadRow; activities: Le
                 <a href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">💬 WhatsApp</a>
               </>
             )}
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => {
+                if (!window.confirm(`Lead „${lead.name}“ endgültig löschen? Notizen und Aktivitäten werden mitgelöscht. Das lässt sich nicht rückgängig machen.`)) return
+                startTransition(() => deleteLead(lead.id))
+              }}
+              className="ml-auto rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              🗑 Lead löschen
+            </button>
           </div>
         </div>
         {lead.message && (

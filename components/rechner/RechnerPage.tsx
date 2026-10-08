@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Faq } from '@/components/Faq'
 import { GuideCards } from '@/components/GuideCards'
 import { IabRechner } from '@/components/IabRechner'
+import { LeadForm } from '@/components/LeadForm'
 import { CATEGORIES, type Category } from '@/lib/categories'
 import type { FaqItem } from '@/lib/faq'
 import { getAllOffers } from '@/lib/offers'
@@ -62,6 +63,8 @@ export async function RechnerPage({ category }: { category?: Category }) {
   // Offers for the result step („Passende Angebote für Ihre … IAB“)
   const offers = await getAllOffers()
   const subject = category ? `für ${category.name}` : ''
+  // Worked example for „investitionsabzugsbetrag beispiel“
+  const ex = computeCalc({ zvE: 120000, joint: false, investment: 100000, year: 2026, church: 0, businesses: 1, profit: 120000, iab: 50000, category: '' })
 
   const appLd = {
     '@context': 'https://schema.org',
@@ -76,7 +79,7 @@ export async function RechnerPage({ category }: { category?: Category }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appLd) }} />
-      <section className="bg-slate-900">
+      <section className="hero-under-header bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> /{' '}
@@ -116,6 +119,45 @@ export async function RechnerPage({ category }: { category?: Category }) {
             <Link href="/ratgeber/sonderabschreibung-7g" className="font-medium text-emerald-700 underline underline-offset-2">Sonderabschreibung</Link>{' '}
             möglich.
           </p>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Investitionsabzugsbetrag Beispiel: Schritt für Schritt</h2>
+          <p className="mt-3">
+            Eine Unternehmerin hat 2026 ein zu versteuerndes Einkommen von 120.000 € (Einzelveranlagung). Für 2027 plant sie ein PV-Direktinvestment
+            über 100.000 € netto.
+          </p>
+          <ol className="mt-3 list-decimal space-y-1.5 pl-5">
+            <li>
+              <strong>2026, Bildung:</strong> Sie zieht einen IAB von 50.000 € (50 % der geplanten Kosten) vom Gewinn ab. Das Einkommen sinkt auf
+              70.000 €, die Steuer um rund <strong>{eur(ex.saving)}</strong>.
+            </li>
+            <li>
+              <strong>2027, Anschaffung:</strong> Der IAB wird dem Gewinn wieder hinzugerechnet (+ 50.000 €). Gleichzeitig mindert sie die
+              Anschaffungskosten um 50.000 € (− 50.000 €). Beides hebt sich auf.
+            </li>
+            <li>
+              <strong>2027, Sonderabschreibung:</strong> Auf die geminderten Kosten von 50.000 € sind bis zu 40 % Sonder-AfA möglich, also weitere
+              20.000 € Betriebsausgaben, dazu die reguläre Abschreibung.
+            </li>
+            <li>
+              <strong>Frist:</strong> Hätte sie nicht bis 31.12.2029 investiert, würde der IAB 2026 rückgängig gemacht, mit Nachzahlung und Zinsen.
+              Was das kostet, zeigt der <Link href="/iab-aufloesen" className="font-medium text-emerald-700 underline underline-offset-2">IAB-Auflösen-Rechner</Link>.
+            </li>
+          </ol>
+          <p className="mt-3 text-sm text-slate-500">
+            Der IAB ist eine Steuerstundung: Der Vorteil entsteht durch den Zeitpunkt und durch unterschiedliche Steuersätze in den Jahren.
+          </p>
+        </section>
+
+        <section id="anfrage" className="scroll-mt-20 rounded-2xl border-2 border-emerald-500 bg-white p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-bold text-slate-900">Passende Projekte für Ihren IAB: Unterlagen & Kalkulation anfordern</h2>
+          <p className="mb-4 mt-1 text-sm text-slate-500">Kostenlos und unverbindlich. Wir melden uns persönlich.</p>
+          <LeadForm
+            preselected={category && !category.comingSoon ? [category.slug] : []}
+            options={CATEGORIES.filter((c) => !c.comingSoon).map((c) => c.slug)}
+            source="rechner"
+          />
         </section>
 
         <section>

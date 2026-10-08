@@ -24,13 +24,16 @@ export type Offer = {
   is_published: boolean
   created_at: string
   gallery: string[]
+  /** Public part of the category data sheet (lib/datasheets.ts) */
+  public_facts: OfferFact[]
   /** Gated: only delivered to registered users */
   details: string | null
   facts: OfferFact[]
   documents: OfferDocument[]
 }
 
-export type OfferFact = { label: string; value: string }
+/** `key` links a fact to its data sheet field (lib/datasheets.ts); free-form facts have none */
+export type OfferFact = { key?: string; label: string; value: string }
 export type OfferDocument = { label: string; url: string }
 
 /** Columns readable without an account (RLS/grants in supabase/schema.sql) */
@@ -70,6 +73,20 @@ export type Lead = {
   /** Planned investment, net */
   investment_cents: number | null
   invest_timing: string | null
+  /** Exact IAB amount in euros, 0 = no IAB formed yet */
+  iab_amount_eur: number | null
+  /** lt50 | 50-100 | 100-200 | gt200 */
+  budget: string | null
+  /** Double opt-in: only confirmed leads are sold */
+  doi_confirmed_at: string | null
+  /** investor | flaeche (landowner for solar parks) */
+  lead_type: string
+  land_area_ha: number | null
+  land_plz: string | null
+  land_type: string | null
+  gclid: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
   status: LeadStatus
   notes: string | null
   follow_up_at: string | null

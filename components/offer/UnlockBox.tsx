@@ -43,23 +43,23 @@ export function UnlockBox({
           href="#anfrage"
           className="mt-3 block rounded-lg bg-emerald-600 py-2 text-center text-sm font-bold text-white transition-colors hover:bg-emerald-500"
         >
-          Angebot anfragen
+          Unterlagen & Kalkulation anfordern
         </a>
       </div>
     )
   }
 
   const items = [
-    'Name und Kontakt des Anbieters',
-    'Unterlagen zum Angebot',
-    'Kalkulation, Konditionen und Betreibermodell',
+    'Kaufpreis, Rendite und Kalkulation',
+    'Unterlagen zum Projekt',
+    'Persönliche Vorstellung beim Anbieter',
     lockedFacts.length > 0 ? `${lockedFacts.slice(0, 2).join(', ')}${lockedFacts.length > 2 ? ' …' : ''}` : null,
   ].filter((x): x is string => Boolean(x))
 
   return (
     <div className="rounded-xl border-2 border-emerald-500 bg-white p-5 shadow-sm">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Dieses Angebot</p>
-      <p className="mt-0.5 text-base font-bold leading-snug text-slate-900">Unverbindlich anfragen</p>
+      <p className="mt-0.5 text-base font-bold leading-snug text-slate-900">Alle Werte freischalten</p>
       <p className="mt-1 text-xs text-slate-500">Mit Ihrer Anfrage erhalten Sie:</p>
       <ul className="mt-2 space-y-1.5 text-xs text-slate-600">
         {items.map((it) => (
@@ -73,7 +73,7 @@ export function UnlockBox({
         href="#anfrage"
         className="mt-4 block w-full rounded-lg bg-emerald-600 py-2.5 text-center text-sm font-bold text-white transition-colors hover:bg-emerald-500"
       >
-        Angebot anfragen
+        Unterlagen & Kalkulation anfordern
       </a>
       <p className="mt-3 text-center text-[11px] text-slate-400">
         Kostenlos · ohne Passwort · bereits Kunde?{' '}

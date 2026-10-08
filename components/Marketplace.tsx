@@ -1,6 +1,6 @@
 'use client'
 
-// Marketplace (/angebote), modelled on PV marketplaces like Milk the Sun: public listing cards, details after free
+// Project showcase (/angebote): public listing cards, details after a free
 // registration, inquiries forwarded to the provider. Exactly one category is shown at a time – never a mixed list.
 
 import Link from 'next/link'
@@ -10,7 +10,6 @@ import { countryName, DEFAULT_COUNTRY, isCountryCode } from '@/lib/countries'
 import { createClient } from '@/lib/supabase/client'
 import type { MarketOffer } from '@/lib/supabase/types'
 import { CountrySelect } from './CountrySelect'
-import { ModalButton } from './ModalButton'
 import { OfferCard } from './OfferList'
 
 const SORTS = [
@@ -191,11 +190,11 @@ export function Marketplace({ offers }: { offers: MarketOffer[] }) {
         {!signedIn && signedIn !== null && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
             <p className="text-sm text-emerald-900">
-              <strong>Kostenlos registrieren</strong> und bei allen Angeboten Kennzahlen, Unterlagen und Details sehen.
+              <strong>Kennzahlen, Unterlagen und Details</strong> sehen Sie nach Ihrer kostenlosen Anfrage. Kein Passwort nötig.
             </p>
-            <ModalButton modal="register" className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-500">
-              Konto erstellen
-            </ModalButton>
+            <a href="#anfrage" className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-500">
+              Unterlagen anfordern
+            </a>
           </div>
         )}
 

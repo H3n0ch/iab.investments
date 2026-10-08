@@ -65,6 +65,7 @@ function toOffer(slug: string, d: Demo, i: number): PublicOffer & GatedOfferData
     availability: d.availability,
     image_url: d.image ?? null,
     gallery: galleryFor(slug, d.image),
+    public_facts: [],
     is_published: true,
     created_at: new Date(2026, 9, 1 + i).toISOString(),
     details: 'Ausführliche Beschreibung des Anbieters mit Betreibermodell, Ablauf und Konditionen. Platzhaltertext für die lokale Vorschau.',

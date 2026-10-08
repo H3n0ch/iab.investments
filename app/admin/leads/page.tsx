@@ -58,6 +58,7 @@ export default async function AdminLeadsPage({ searchParams }: PageProps<'/admin
     { label: 'Leads gesamt', value: rows.length, color: 'text-slate-900' },
     { label: 'Letzte 7 Tage', value: rows.filter((l) => new Date(l.created_at).getTime() > startOfWeek).length, color: 'text-emerald-600' },
     { label: 'Neu', value: rows.filter((l) => l.status === 'neu').length, color: 'text-blue-600' },
+    { label: 'Verkaufbar (DOI ✓)', value: rows.filter((l) => l.consent_share && l.doi_confirmed_at).length, color: 'text-emerald-700' },
     { label: 'Weitergegeben', value: rows.filter((l) => l.status === 'weitergegeben').length, color: 'text-violet-600' },
   ]
 

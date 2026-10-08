@@ -6,8 +6,9 @@ import { GuideCards } from '@/components/GuideCards'
 import { Faq } from '@/components/Faq'
 import { OfferCard } from '@/components/OfferList'
 import { OfferSearch } from '@/components/OfferSearch'
-import { RegisterBanner } from '@/components/RegisterBanner'
+import { FristCta } from '@/components/FristCta'
 import { TrustBar } from '@/components/TrustBar'
+import { TrustBlock } from '@/components/TrustBlock'
 import { getCategory } from '@/lib/categories'
 import { HOME_FAQ } from '@/lib/faq'
 import { formatDeadline, iabYears } from '@/lib/iab'
@@ -28,9 +29,9 @@ export default async function Home() {
 
   return (
     <>
-      {/* Hero in the style of Milk the Sun: full-height photos, header floating on top, slogan, glass subline, search */}
+      {/* Hero: full-height photos, header floating on top, slogan, glass subline, search */}
       {/* No overflow-hidden on the section: the search dropdowns must be able to extend below the hero */}
-      <section className="relative z-10 flex min-h-svh flex-col bg-slate-900">
+      <section className="hero-under-header relative z-10 flex min-h-svh flex-col bg-slate-900">
         {/* One full-bleed photo, no colour filter – only a light neutral shade at the top (header) and behind the text */}
         <div aria-hidden className="absolute inset-0 overflow-hidden">
           <Image
@@ -45,8 +46,6 @@ export default async function Home() {
           <div className="absolute inset-0 bg-linear-to-b from-black/45 via-black/10 to-black/25" />
         </div>
 
-        {/* Spacer for the fixed header */}
-        <div className="h-[68px] shrink-0 lg:h-[84px]" />
         <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-12 text-center">
           <DeadlineBanner />
           <h1 className="mt-6 text-balance text-[clamp(32px,4.4vw,52px)] font-bold leading-[1.08] tracking-[-0.02em] text-white [text-shadow:0_2px_6px_rgba(0,0,0,.35),0_10px_36px_rgba(0,0,0,.35)]">
@@ -54,7 +53,7 @@ export default async function Home() {
           </h1>
           {/* Exactly two lines from sm up: one sentence per line */}
           <div className="mt-4 max-w-full text-balance rounded-[14px] bg-[rgb(9_24_38/0.42)] px-[18px] py-2.5 shadow-[0_10px_30px_-14px_rgba(0,0,0,.5)] ring-1 ring-white/15 backdrop-blur-[10px]">
-            <p className="text-[clamp(15px,1.15vw,17px)] font-medium leading-normal text-white sm:whitespace-nowrap">Die Plattform für Investments mit Investitionsabzugsbetrag.</p>
+            <p className="text-[clamp(15px,1.15vw,17px)] font-medium leading-normal text-white sm:whitespace-nowrap">Ratgeber und geprüfte Projekte für Ihren Investitionsabzugsbetrag.</p>
             <p className="mt-1 text-sm text-slate-300 sm:whitespace-nowrap">Von PV über Batteriespeicher bis zum Tiny House.</p>
           </div>
           <OfferSearch className="mt-[clamp(28px,4vh,44px)] w-full text-left" />
@@ -77,29 +76,33 @@ export default async function Home() {
       <section id="kategorien" className="mx-auto max-w-6xl scroll-mt-14 px-4 py-14">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Aktuelle Projekte</h2>
-          <p className="mt-2 text-slate-500">Wählen Sie ein Investitionsgut und sehen Sie alle aktuellen Angebote. Alle Preise netto.</p>
+          <p className="mt-2 text-slate-500">Wählen Sie ein Investitionsgut und sehen Sie reale Projekte unserer Anbieter. Alle Preise netto.</p>
         </div>
         <CategoryGrid />
       </section>
 
-      {/* Newest offers with locked details – the main sign-up hook (like TinyMarket's ProjectsPreview) */}
+      {/* Newest offers with locked details – details come with the free inquiry */}
       {latest.length > 0 && (
         <section className="mx-auto max-w-6xl px-4 pb-14">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-2">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Neueste Angebote</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Neueste Projekte</h2>
               <p className="mt-2 text-slate-500">Frisch eingetroffen. Alle Preise netto.</p>
             </div>
-            <Link href="/angebote" className="font-semibold text-emerald-700 hover:underline">Alle Angebote →</Link>
+            <Link href="/angebote" className="font-semibold text-emerald-700 hover:underline">Alle Projekte →</Link>
           </div>
           <div className="space-y-4">
             {latest.map(({ offer, category }) => (
               <OfferCard key={offer.id} offer={offer} category={category} />
             ))}
           </div>
-          <RegisterBanner />
         </section>
       )}
+
+      <section className="mx-auto max-w-6xl space-y-6 px-4 pb-14">
+        <FristCta />
+        <TrustBlock />
+      </section>
 
 
       {/* How it works */}
@@ -108,9 +111,9 @@ export default async function Home() {
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">So funktioniert&apos;s</h2>
           <ol className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
-              ['Angebote suchen', 'Produkt und Budget wählen und alle passenden Angebote im Marktplatz sehen. Alle Preise netto.'],
-              ['Angebot anfragen', 'Ein kurzes Formular, kein Passwort. Kalkulation und Unterlagen erhalten Sie sofort per E-Mail.'],
-              ['Rückruf vom Anbieter', 'Der Anbieter meldet sich direkt bei Ihnen, kostenlos und unverbindlich.'],
+              ['Frist prüfen', 'Frist-Check oder IAB-Rechner: Sie sehen, bis wann und wie viel Sie investieren müssen.'],
+              ['Unterlagen anfordern', 'Ein kurzes Formular, kein Passwort. Projektdetails sehen Sie sofort, Kalkulation und Unterlagen folgen.'],
+              ['Persönlicher Rückruf', 'Wir melden uns und stellen den Kontakt zum passenden Anbieter her, kostenlos und unverbindlich.'],
             ].map(([t, d], i) => (
               <li key={t} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">{i + 1}</span>

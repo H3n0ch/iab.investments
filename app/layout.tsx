@@ -1,18 +1,21 @@
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Figtree } from "next/font/google";
+import Script from "next/script";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteModal } from "@/components/SiteModal";
 import { FloatingContact } from "@/components/FloatingContact";
 import "./globals.css";
 
-// Open Sans like Milk the Sun
-const openSans = Open_Sans({
-  variable: "--font-open-sans",
+// Figtree like PVA-Invest: modern, slightly rounded, reads well in data sheets
+const figtree = Figtree({
+  variable: "--font-figtree",
   subsets: ["latin"],
 });
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://iab.investments";
+// Plausible (cookieless, EU-hosted) – conversion tracking per page and category. Off when unset.
+const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -27,13 +30,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="de" className={`${openSans.variable} h-full antialiased`}>
+    <html lang="de" className={`${figtree.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-(--header-h)">{children}</main>
         <Footer />
         <SiteModal />
         <FloatingContact />
+        {PLAUSIBLE_DOMAIN && (
+          <>
+            {/* Queue events fired before the script has loaded */}
+            <Script id="plausible-init" strategy="afterInteractive">
+              {"window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}"}
+            </Script>
+            <Script src="https://plausible.io/js/script.js" data-domain={PLAUSIBLE_DOMAIN} strategy="afterInteractive" />
+          </>
+        )}
       </body>
     </html>
   );

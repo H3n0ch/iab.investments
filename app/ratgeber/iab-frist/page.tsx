@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ModalButton } from '@/components/ModalButton'
 import { GuideCards } from '@/components/GuideCards'
 import { guidesBySlug } from '@/lib/wissen'
-import { formatDeadline, iabYears } from '@/lib/iab'
+import { formatDeadline, fristPath, FRIST_PAGE_YEARS, iabYears } from '@/lib/iab'
+import { FristCta } from '@/components/FristCta'
+
+// The table follows the calendar year
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'IAB-Frist: Bis wann muss der Investitionsabzugsbetrag investiert werden?',
@@ -45,11 +48,18 @@ export default function IabFristPage() {
               {years.map((y) => (
                 <tr key={y}>
                   <td className="px-4 py-2.5">Wirtschaftsjahr {y}</td>
-                  <td className="px-4 py-2.5 font-semibold">{formatDeadline(y)}</td>
+                  <td className="px-4 py-2.5 font-semibold">
+                    {(FRIST_PAGE_YEARS as readonly number[]).includes(y) ? (
+                      <Link href={fristPath(y)} className="text-emerald-700 underline underline-offset-2">{formatDeadline(y)}</Link>
+                    ) : (
+                      formatDeadline(y)
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <p className="mt-2 text-xs text-slate-500">Quelle: § 7g Abs. 3 EStG. Bei abweichendem Wirtschaftsjahr verschiebt sich das Datum.</p>
         </section>
 
         <section>
@@ -88,12 +98,7 @@ export default function IabFristPage() {
           </p>
         </section>
 
-        <div className="rounded-2xl bg-slate-900 p-6 text-white">
-          <p className="text-lg font-bold">Frist läuft? Alle Angebote mit Kennzahlen und Unterlagen sehen.</p>
-          <ModalButton modal="register" className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 font-semibold hover:bg-emerald-500">
-            Kostenlos registrieren
-          </ModalButton>
-        </div>
+        <FristCta />
 
         <section>
           <h2 className="mb-4 text-xl font-bold text-slate-900">Weiterlesen</h2>

@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { ASSESSMENT_DELAY_MONTHS, INTEREST_PER_MONTH, lapseCost } from '@/lib/aufloesen'
-import { daysUntilDeadline, formatDeadline, iabYears, type AmountValue } from '@/lib/iab'
+import { CATEGORIES } from '@/lib/categories'
+import { daysUntilDeadline, formatDeadline, iabYears } from '@/lib/iab'
 import { eur, eur2, isTaxYear } from '@/lib/rechner'
 import type { TaxYear } from '@/lib/tax'
 import { LeadForm } from './LeadForm'
@@ -20,9 +21,8 @@ function euroIn(v: string): number {
 const show = (n: number) => (n ? n.toLocaleString('de-DE') : '')
 const date = (d: Date) => d.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' })
 
-function amountBucket(iab: number): AmountValue {
-  return iab <= 50000 ? 'lt50' : iab <= 100000 ? '50-100' : iab <= 150000 ? '100-150' : '150-200'
-}
+/** Deadline leads are only offered categories with a lead buyer */
+const LIVE_SLUGS = CATEGORIES.filter((c) => !c.comingSoon).map((c) => c.slug)
 
 export function AufloesenRechner() {
   // Running vintages that have a tax tariff, most urgent (oldest) first
@@ -144,13 +144,21 @@ export function AufloesenRechner() {
           </details>
         </div>
 
-        <div id="frist-retten" className="scroll-mt-20 rounded-2xl border-2 border-emerald-500 bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-lg font-bold text-slate-900">Frist retten: schnell lieferbare Investitionsgüter anfragen</p>
+        <div id="anfrage" className="scroll-mt-20 rounded-2xl border-2 border-emerald-500 bg-white p-5 shadow-sm sm:p-6">
+          <p className="text-lg font-bold text-slate-900">Frist retten: Unterlagen & Kalkulation anfordern</p>
           <p className="mb-4 mt-1 text-sm text-slate-500">
-            Wählen Sie, was infrage kommt. Passende Anbieter melden sich bei Ihnen, kostenlos und unverbindlich. Entscheidend ist die Lieferung
-            bis {formatDeadline(year)}, nicht die Bestellung.
+            Wir senden Ihnen Projekte, die bis {formatDeadline(year)} lieferbar sind, und melden uns persönlich. Entscheidend ist die Lieferung,
+            nicht die Bestellung.
           </p>
-          <LeadForm preselected={[]} source="frist" amount={amountBucket(iab)} year={year} submitLabel="Frist retten: Angebote anfragen" />
+          <LeadForm
+            key={`${year}-${iab}`}
+            preselected={[]}
+            options={LIVE_SLUGS}
+            source="frist"
+            iabAmount={iab > 0 ? iab : undefined}
+            year={iab > 0 ? year : undefined}
+            submitLabel="Frist retten: Unterlagen anfordern"
+          />
         </div>
       </div>
     </div>

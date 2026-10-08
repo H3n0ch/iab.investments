@@ -7,12 +7,14 @@ import { countryName } from '@/lib/countries'
 import { DeadlineBanner } from '@/components/DeadlineBanner'
 import { LockButton } from '@/components/offer/LockButton'
 import { OfferGallery } from '@/components/offer/OfferGallery'
-import { OfferInquiryForm } from '@/components/offer/OfferInquiryForm'
+import { InquiryModal } from '@/components/InquiryModal'
+import { LeadForm } from '@/components/LeadForm'
+import { Datasheet } from '@/components/offer/Datasheet'
 import { UnlockBox } from '@/components/offer/UnlockBox'
 import { getCurrentUser } from '@/lib/auth'
 import { formatEuro, getCategory, GOALS } from '@/lib/categories'
 import { getGatedOffer, getOfferFactLabels, getPublicOffer, recordOfferView, useDemo } from '@/lib/offers'
-import type { GatedOfferData } from '@/lib/supabase/types'
+import type { GatedOfferData, OfferFact } from '@/lib/supabase/types'
 import { UNLOCK_COOKIE } from '@/lib/unlock'
 
 // Layout adapted from TinyMarket's app/projects/[id]/page.tsx:
@@ -44,7 +46,7 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
 
   const [gated, factLabels] = await Promise.all([
     unlocked ? getGatedOffer(slug, id) : Promise.resolve<GatedOfferData | null>(null),
-    unlocked ? Promise.resolve<string[]>([]) : getOfferFactLabels(slug, id),
+    unlocked ? Promise.resolve<OfferFact[]>([]) : getOfferFactLabels(slug, id),
   ])
   if (user) await recordOfferView(user.id, offer.id).catch(() => {})
 
@@ -62,9 +64,8 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
     ] as const
   ).filter(([, v]) => v)
   const isPublic = (label: string) => publicFacts.some(([, , re]) => re.test(label))
-  const gatedFacts = unlocked
-    ? (gated?.facts ?? []).filter((f) => !isPublic(f.label))
-    : factLabels.filter((l) => !isPublic(l)).map((label) => ({ label, value: '' }))
+  // Data sheet facts (with key) always count; free-form facts that repeat a public column are dropped
+  const gatedFacts = (unlocked ? (gated?.facts ?? []) : factLabels).filter((f) => f.key || !isPublic(f.label))
   const abroad = offer.country !== 'DE'
 
   const fallback = c.image ? (
@@ -173,46 +174,27 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
             </div>
           </Section>
 
-          {publicFacts.length + gatedFacts.length > 0 && (
-            <Section title="Kennzahlen">
-              <table className="w-full">
-                <tbody>
-                  {publicFacts.map(([label, value]) => (
-                    <tr key={label} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                      <td className="w-2/5 px-4 py-2.5 text-sm text-slate-500">{label}</td>
-                      <td className="break-words px-4 py-2.5 text-sm font-medium text-slate-900">{value}</td>
-                    </tr>
-                  ))}
-                  {gatedFacts.map((f) => (
-                    <tr key={f.label} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                      <td className="w-2/5 px-4 py-2.5 text-sm text-slate-500">{f.label}</td>
-                      <td className="break-words px-4 py-2.5 text-sm font-medium text-slate-900">
-                        {unlocked ? (
-                          f.value
-                        ) : (
-                          <LockButton
-                            label={
-                              <span className="inline-flex items-center gap-2">
-                                <span aria-hidden className="select-none tracking-widest text-slate-300">••••••</span>
-                                <span className="text-xs font-semibold text-emerald-700">mit Anfrage</span>
-                              </span>
-                            }
-                          />
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Section>
-          )}
+          <Datasheet
+            categorySlug={c.slug}
+            basics={publicFacts.map(([label, value]) => [label, value as string])}
+            publicFacts={offer.public_facts ?? []}
+            gatedFacts={gatedFacts}
+            unlocked={unlocked}
+          />
 
+          {/* The provider is never named on the page – the personal introduction is what the lead buys from us */}
           <Section title="Anbieter">
             <div className="flex items-center gap-3 px-4 py-4">
-              <div className="h-12 w-12 shrink-0 rounded-xl border border-slate-200 bg-slate-100" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl">🤝</div>
               <div className="min-w-0">
-                <p className="select-none truncate text-sm font-semibold text-slate-300 blur-sm">Anbieter GmbH &amp; Co. KG</p>
-                <p className="mt-0.5 text-xs text-slate-500">Name und Kontakt des Anbieters erhalten Sie mit Ihrer Anfrage. Er stellt sich direkt bei Ihnen vor.</p>
+                <p className="text-sm font-semibold text-slate-900">Persönliche Vorstellung beim Anbieter</p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Wir sprechen kurz mit Ihnen, klären Budget und Frist und stellen Sie dann dem Anbieter vor. Betreiber und genauen Standort
+                  erfahren Sie im persönlichen Gespräch.
+                </p>
+                {!unlocked && (
+                  <LockButton label={<span className="mt-1 inline-block text-xs font-semibold text-emerald-700">Jetzt Unterlagen anfordern →</span>} />
+                )}
               </div>
             </div>
           </Section>
@@ -230,29 +212,6 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
             </div>
           )}
 
-          {/* Inquiry – direct, no account needed first */}
-          <div id="anfrage" className="mb-6 scroll-mt-20 rounded-xl border-2 border-emerald-500 bg-white p-5">
-            <p className="text-lg font-bold text-slate-900">Angebot anfragen</p>
-            <p className="mb-4 mt-1 text-sm text-slate-500">
-              {unlocked
-                ? 'Der Anbieter meldet sich direkt bei Ihnen, kostenlos und unverbindlich.'
-                : 'Der Anbieter ruft Sie zurück. Kalkulation und Unterlagen sehen Sie sofort nach Ihrer Anfrage, ohne Passwort.'}
-            </p>
-            <OfferInquiryForm
-              categorySlug={c.slug}
-              categoryName={c.name}
-              offerId={offer.id}
-              offerTitle={offer.title}
-              minInvestment={offer.min_investment_cents != null ? offer.min_investment_cents / 100 : null}
-              defaults={{
-                name: user?.profile?.full_name,
-                email: user?.email,
-                phone: user?.profile?.phone,
-                company: user?.profile?.company,
-              }}
-            />
-          </div>
-
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 text-xs leading-relaxed text-slate-500">
             <p className="mb-2 font-semibold text-slate-700">Hinweis</p>
             <p>
@@ -263,6 +222,28 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
           </div>
         </div>
       </div>
+      {/* Inquiry as a modal – opened by every link to #anfrage (sidebar, locked values, sticky CTA) */}
+      <InquiryModal
+        title="Unterlagen & Kalkulation anfordern"
+        subtitle={
+          unlocked
+            ? 'Wir melden uns persönlich und stellen den Kontakt zum Anbieter her, kostenlos und unverbindlich.'
+            : 'Alle Werte sehen Sie sofort nach Ihrer Anfrage, ohne Passwort. Wir melden uns persönlich.'
+        }
+      >
+        <LeadForm
+          preselected={[c.slug]}
+          source="angebot"
+          offer={{ id: offer.id, title: offer.title, categorySlug: c.slug, categoryName: c.name }}
+          submitLabel="Unterlagen & Kalkulation anfordern"
+          defaults={{
+            name: user?.profile?.full_name,
+            email: user?.email,
+            phone: user?.profile?.phone,
+            company: user?.profile?.company,
+          }}
+        />
+      </InquiryModal>
     </div>
   )
 }

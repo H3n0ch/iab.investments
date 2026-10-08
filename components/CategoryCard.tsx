@@ -32,7 +32,7 @@ export function CategoryCard({ category: c }: { category: Category }) {
         )}
         {c.comingSoon && (
           <span className="absolute right-3 top-3 rounded-full bg-slate-900/80 px-2 py-0.5 text-[11px] font-semibold text-white">
-            Anbieter in Prüfung
+            Bald verfügbar
           </span>
         )}
       </Link>
@@ -58,7 +58,7 @@ export function CategoryCard({ category: c }: { category: Category }) {
             href={`/${c.slug}`}
             className="block rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
           >
-            {c.comingSoon ? 'Jetzt vormerken →' : 'Angebote ansehen →'}
+            {c.comingSoon ? 'Jetzt vormerken →' : 'Projekte ansehen →'}
           </Link>
         </div>
       </div>

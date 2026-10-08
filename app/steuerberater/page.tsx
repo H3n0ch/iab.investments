@@ -42,7 +42,7 @@ export default function SteuerberaterPage() {
 
   return (
     <>
-      <section className="bg-slate-900">
+      <section className="hero-under-header bg-slate-900">
         <div className="mx-auto max-w-4xl px-4 py-12 sm:py-16">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / Für Steuerberater
@@ -127,7 +127,7 @@ export default function SteuerberaterPage() {
             </Link>{' '}
             zeigt Ihren Mandanten, welches Investitionsvolumen nötig ist. Den{' '}
             <Link href="/angebote" className="font-medium text-emerald-700 underline underline-offset-2">
-              Marktplatz
+              Projekte
             </Link>{' '}
             können Sie jederzeit selbst ansehen.
           </p>

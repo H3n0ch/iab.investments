@@ -1,31 +1,32 @@
 'use server'
 
+import { randomBytes } from 'node:crypto'
 import { cookies, headers } from 'next/headers'
-import { CATEGORIES, formatEuro, getCategory, GOALS } from '@/lib/categories'
-import { categoryShareText, CONSENT_VERSION, offerShareText } from '@/lib/consent'
+import { CATEGORIES, formatEuro } from '@/lib/categories'
+import { categoryShareText, CONSENT_VERSION, LAND_SHARE_TEXT, offerShareText } from '@/lib/consent'
 import {
-  AMOUNTS,
   amountBucket,
+  BUDGETS,
   formatDeadline,
   iabDeadline,
   iabYears,
   investTimings,
-  isValidAmount,
-  isValidGoal,
+  isValidBudget,
   isValidLegalForm,
   isValidTiming,
+  LAND_TYPES,
   LEGAL_FORMS,
 } from '@/lib/iab'
 import { getCurrentUser } from '@/lib/auth'
 import { getPublicOffer } from '@/lib/offers'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import { sendCalcReport, sendLeadAdminNotification, sendLeadConfirmation } from '@/lib/email'
+import { sendCalcReport, sendLeadAdminNotification, sendLeadDoi } from '@/lib/email'
 import { UNLOCK_COOKIE } from '@/lib/unlock'
 import { calcHint, computeCalc, eur, eur2, isTaxYear, reportRows, type CalcParams } from '@/lib/rechner'
 
 export type LeadFormState = { ok: boolean; error?: string; fieldErrors?: Record<string, string> } | null
 
-const SOURCES = ['check', 'tile', 'landing', 'offer', 'frist'] as const
+const SOURCES = ['check', 'tile', 'landing', 'offer', 'frist', 'angebot', 'ratgeber', 'rechner'] as const
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // Bots submit instantly; humans need a few seconds to fill the form
 const MIN_FILL_MS = 2500
@@ -48,6 +49,22 @@ async function unlockOffers() {
 const PHONE_ERROR = 'Bitte geben Sie Ihre Telefonnummer an, damit der Anbieter Sie zurückrufen kann.'
 const validPhone = (p: string | null) => (p ?? '').replace(/[^0-9]/g, '').length >= 6
 
+/** Tracking fields every inquiry form sends (landing path, campaign, Google Ads click id) */
+function attribution(fd: FormData) {
+  return {
+    landing_path: str(fd, 'landing_path', 300) || null,
+    utm_source: str(fd, 'utm_source', 100) || null,
+    utm_medium: str(fd, 'utm_medium', 100) || null,
+    utm_campaign: str(fd, 'utm_campaign', 150) || null,
+    gclid: str(fd, 'gclid', 200) || null,
+  }
+}
+
+/**
+ * Inquiry wizard (all pages): category → IAB amount → deadline → budget → timing → contact + consents.
+ * Every lead goes to iab.investments first; it only counts as sellable after the double opt-in.
+ * With `offer_id` the consent names exactly this offer and its provider.
+ */
 export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<LeadFormState> {
   // Honeypot + timing: pretend success so bots don't retry
   const renderedAt = Number(fd.get('_t') ?? 0)
@@ -59,32 +76,41 @@ export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<Le
   const email = str(fd, 'email', 200).toLowerCase()
   const phone = str(fd, 'phone', 40) || null
   const company = str(fd, 'company', 160) || null
-  const amount = str(fd, 'iab_amount')
+  const legalForm = str(fd, 'legal_form')
+  const iabRaw = str(fd, 'iab_amount_eur')
+  const iabEur = Math.min(Math.max(0, Math.floor(Number(iabRaw.replace(/[^0-9]/g, '')) || 0)), 200_000)
   const yearRaw = Number(str(fd, 'iab_year'))
-  const goal = str(fd, 'goal')
+  const budget = str(fd, 'budget')
+  const timing = str(fd, 'invest_timing')
   const sourceRaw = str(fd, 'source')
   const offerRaw = str(fd, 'offer_id')
-  const offerId = /^[0-9a-f-]{36}$/i.test(offerRaw) ? offerRaw : null
   const slugs = fd.getAll('categories').map(String)
   const consentPrivacy = fd.get('consent_privacy') === 'on'
   const consentShare = fd.get('consent_share') === 'on'
   const consentCall = fd.get('consent_call') === 'on'
 
+  const categories = CATEGORIES.filter((c) => slugs.includes(c.slug))
+  const offer = offerRaw && categories.length === 1 ? await getPublicOffer(categories[0].slug, offerRaw) : null
+
   const fieldErrors: Record<string, string> = {}
+  if (categories.length === 0) fieldErrors.categories = 'Bitte wählen Sie mindestens eine Kategorie.'
+  if (iabRaw === '') fieldErrors.iab_amount_eur = 'Bitte geben Sie den IAB-Betrag an oder wählen Sie „Noch kein IAB“.'
+  if (!isValidBudget(budget)) fieldErrors.budget = 'Bitte wählen Sie Ihr Budget.'
+  if (!isValidTiming(timing)) fieldErrors.invest_timing = 'Bitte wählen Sie, wann Sie investieren möchten.'
   if (name.length < 2) fieldErrors.name = 'Bitte geben Sie Ihren Namen an.'
   if (!EMAIL_RE.test(email)) fieldErrors.email = 'Bitte geben Sie eine gültige E-Mail-Adresse an.'
   if (!validPhone(phone)) fieldErrors.phone = PHONE_ERROR
-  const categories = CATEGORIES.filter((c) => slugs.includes(c.slug))
-  if (categories.length === 0) fieldErrors.categories = 'Bitte wählen Sie mindestens eine Kategorie.'
   if (!consentPrivacy) fieldErrors.consent_privacy = 'Bitte bestätigen Sie die Datenschutzerklärung.'
-  if (!consentShare) fieldErrors.consent_share = 'Ohne diese Einwilligung können wir keine Anbieter vermitteln.'
-  if (!consentCall) fieldErrors.consent_call = 'Die Anbieter melden sich telefonisch. Bitte bestätigen Sie den Rückruf.'
+  if (!consentShare) fieldErrors.consent_share = 'Ohne diese Einwilligung können wir Ihnen keine Projekte vermitteln.'
+  if (!consentCall) fieldErrors.consent_call = 'Wir und die Anbieter melden uns telefonisch. Bitte bestätigen Sie den Rückruf.'
+  if (offerRaw && !offer) return { ok: false, error: 'Dieses Projekt ist nicht mehr verfügbar.' }
   if (Object.keys(fieldErrors).length) return { ok: false, fieldErrors }
 
-  const iabAmount = isValidAmount(amount) ? amount : null
-  const iabYear = iabYears().includes(yearRaw) ? yearRaw : null
-  const iabGoal = isValidGoal(goal) ? goal : null
+  const iabYear = iabEur > 0 && iabYears().includes(yearRaw) ? yearRaw : null
   const source = (SOURCES as readonly string[]).includes(sourceRaw) ? sourceRaw : 'landing'
+  const legal = isValidLegalForm(legalForm) ? legalForm : null
+  const shareText = offer ? offerShareText(offer.title, categories[0].name) : categoryShareText(categories.map((c) => c.name))
+  const token = randomBytes(24).toString('base64url')
 
   const h = await headers()
   const user = await getCurrentUser()
@@ -109,21 +135,25 @@ export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<Le
       email,
       phone,
       company,
-      iab_amount: iabAmount,
+      legal_form: legal,
+      iab_amount_eur: iabEur,
+      iab_amount: iabEur > 0 ? amountBucket(iabEur) : null,
       iab_year: iabYear,
       iab_deadline: iabYear ? iabDeadline(iabYear).toISOString().slice(0, 10) : null,
-      goal: iabGoal,
+      budget,
+      invest_timing: timing,
       source,
-      offer_id: offerId,
-      landing_path: str(fd, 'landing_path', 300) || null,
-      utm_source: str(fd, 'utm_source', 100) || null,
+      offer_id: offer?.id ?? null,
+      ...attribution(fd),
       user_agent: h.get('user-agent')?.slice(0, 300) ?? null,
       consent_text_version: CONSENT_VERSION,
       consent_privacy: true,
       consent_share: true,
-      consent_share_text: categoryShareText(categories.map((c) => c.name)),
+      // Exact wording – proof of consent when the lead is passed on
+      consent_share_text: shareText,
       consent_call: true,
       consent_at: new Date().toISOString(),
+      doi_token: token,
       user_id: user?.id ?? null,
     })
     .select('id')
@@ -141,22 +171,32 @@ export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<Le
     if (lcErr) console.error('lead_categories insert failed', lcErr)
   }
 
+  const budgetLabel = BUDGETS.find((b) => b.value === budget)!.label
+  const extra: [string, string][] = [
+    ['Budget', budgetLabel],
+    ['Zeitpunkt', investTimings().find((t) => t.value === timing)!.label],
+  ]
+  if (legal) extra.push(['Rechtsform', LEGAL_FORMS.find((f) => f.value === legal)!.label])
+  if (offer) extra.unshift(['Projekt', offer.title])
+  if (budget === 'gt200') extra.push(['Hinweis', 'Großes Ticket: Provisionspartner'])
+  extra.push(['Double-Opt-in', 'ausstehend'], ['Telefon-Einwilligung', 'ja'])
+
   const mail = {
     id: lead.id,
     name,
     email,
     phone,
     company,
-    amountLabel: AMOUNTS.find((a) => a.value === iabAmount)?.label ?? null,
+    amountLabel: iabEur > 0 ? formatEuro(iabEur) : 'noch kein IAB',
     deadline: iabYear ? formatDeadline(iabYear) : null,
-    goalLabel: GOALS.find((g) => g.value === iabGoal)?.label ?? null,
+    goalLabel: null,
     categoryNames: categories.map((c) => c.name),
     source,
-    extra: [['Telefon-Einwilligung', 'ja']] as [string, string][],
+    extra,
   }
   await unlockOffers()
   // A failing mail must not lose the lead – it's already stored
-  await Promise.allSettled([sendLeadAdminNotification(mail), sendLeadConfirmation(mail)]).then((rs) =>
+  await Promise.allSettled([sendLeadAdminNotification(mail), sendLeadDoi({ ...mail, token })]).then((rs) =>
     rs.forEach((r) => r.status === 'rejected' && console.error('lead mail failed', r.reason))
   )
 
@@ -330,48 +370,37 @@ export async function submitCalcReport(_prev: CalcReportState, fd: FormData): Pr
   return { ok: true, mailed }
 }
 
-export type OfferInquiryState = { ok: boolean; unlocked?: boolean; error?: string; fieldErrors?: Record<string, string> } | null
-
 /**
- * Offer page: direct inquiry instead of registering first. Stores a sellable lead for exactly this offer
- * (with consent to share with its provider and to be called) and unlocks all offer details via cookie.
+ * /solarpark-flaeche-verpachten: landowners offering land to solar park developers.
+ * Separate lead type – the buyers are developers, not the investment providers.
  */
-export async function submitOfferInquiry(_prev: OfferInquiryState, fd: FormData): Promise<OfferInquiryState> {
+export async function submitLandLead(_prev: LeadFormState, fd: FormData): Promise<LeadFormState> {
   const renderedAt = Number(fd.get('_t') ?? 0)
   if (str(fd, 'website') || (renderedAt && Date.now() - renderedAt < MIN_FILL_MS)) return { ok: true }
-
-  const slug = str(fd, 'category')
-  const offerRaw = str(fd, 'offer_id')
-  const category = getCategory(slug)
-  const [offer, user] = await Promise.all([category ? getPublicOffer(slug, offerRaw) : null, getCurrentUser()])
-  if (!category || !offer) return { ok: false, error: 'Dieses Angebot ist nicht mehr verfügbar.' }
 
   const name = str(fd, 'name', 120)
   const email = str(fd, 'email', 200).toLowerCase()
   const phone = str(fd, 'phone', 40) || null
-  const company = str(fd, 'company', 160) || null
-  const legalForm = str(fd, 'legal_form')
-  const timing = str(fd, 'invest_timing')
-  const investment = Math.min(Number(str(fd, 'investment').replace(/[^0-9]/g, '')) || 0, 100_000_000)
-  const yearRaw = Number(str(fd, 'iab_year'))
+  const area = Math.min(Number(str(fd, 'land_area_ha').replace(',', '.')) || 0, 100_000)
+  const plz = str(fd, 'land_plz', 10)
+  const landType = str(fd, 'land_type')
+  const grid = str(fd, 'grid', 20)
 
   const fieldErrors: Record<string, string> = {}
+  if (!(area > 0)) fieldErrors.land_area_ha = 'Bitte geben Sie die Größe der Fläche in Hektar an.'
+  if (!/^\d{5}$/.test(plz)) fieldErrors.land_plz = 'Bitte geben Sie die Postleitzahl der Fläche an.'
+  if (!LAND_TYPES.some((t) => t.value === landType)) fieldErrors.land_type = 'Bitte wählen Sie die Art der Fläche.'
   if (name.length < 2) fieldErrors.name = 'Bitte geben Sie Ihren Namen an.'
   if (!EMAIL_RE.test(email)) fieldErrors.email = 'Bitte geben Sie eine gültige E-Mail-Adresse an.'
-  if (!validPhone(phone)) fieldErrors.phone = PHONE_ERROR
-  if (!isValidLegalForm(legalForm)) fieldErrors.legal_form = 'Bitte wählen Sie Ihre Rechtsform.'
-  if (investment < 1000) fieldErrors.investment = 'Bitte geben Sie die geplante Investitionssumme an.'
-  if (!isValidTiming(timing)) fieldErrors.invest_timing = 'Bitte wählen Sie, wann Sie investieren möchten.'
-  if (fd.get('consent_share') !== 'on') fieldErrors.consent_share = 'Ohne diese Einwilligung kann der Anbieter Sie nicht kontaktieren.'
-  if (fd.get('consent_call') !== 'on') fieldErrors.consent_call = 'Der Anbieter meldet sich telefonisch. Bitte bestätigen Sie den Rückruf.'
+  if (!validPhone(phone)) fieldErrors.phone = 'Bitte geben Sie Ihre Telefonnummer an, damit ein Projektierer Sie zurückrufen kann.'
+  if (fd.get('consent_share') !== 'on') fieldErrors.consent_share = 'Ohne diese Einwilligung können wir die Fläche nicht anbieten.'
+  if (fd.get('consent_call') !== 'on') fieldErrors.consent_call = 'Projektierer melden sich telefonisch. Bitte bestätigen Sie den Rückruf.'
   if (fd.get('consent_privacy') !== 'on') fieldErrors.consent_privacy = 'Bitte bestätigen Sie die Datenschutzerklärung.'
   if (Object.keys(fieldErrors).length) return { ok: false, fieldErrors }
 
-  const iabYear = iabYears().includes(yearRaw) ? yearRaw : null
-  const legalLabel = LEGAL_FORMS.find((f) => f.value === legalForm)!.label
-  const timingLabel = investTimings().find((t) => t.value === timing)!.label
-  const path = `/${category.slug}/${offer.id}`
-
+  const typeLabel = LAND_TYPES.find((t) => t.value === landType)!.label
+  const gridLabel = grid === 'ja' ? 'Netzanschluss in der Nähe bekannt' : grid === 'nein' ? 'kein Netzanschluss bekannt' : 'Netzanschluss unbekannt'
+  const token = randomBytes(24).toString('base64url')
   const h = await headers()
   let supabase
   try {
@@ -387,52 +416,41 @@ export async function submitOfferInquiry(_prev: OfferInquiryState, fd: FormData)
       name,
       email,
       phone,
-      company,
-      legal_form: legalForm,
-      investment_cents: investment * 100,
-      invest_timing: timing,
-      iab_year: iabYear,
-      iab_deadline: iabYear ? iabDeadline(iabYear).toISOString().slice(0, 10) : null,
-      source: 'angebot',
-      offer_id: offer.id,
-      landing_path: str(fd, 'landing_path', 300) || path,
-      utm_source: str(fd, 'utm_source', 100) || null,
+      lead_type: 'flaeche',
+      land_area_ha: area,
+      land_plz: plz,
+      land_type: landType,
+      message: gridLabel,
+      source: 'flaeche',
+      ...attribution(fd),
       user_agent: h.get('user-agent')?.slice(0, 300) ?? null,
       consent_text_version: CONSENT_VERSION,
       consent_privacy: true,
       consent_share: true,
-      // Exact wording with the offer named – proof of consent when the lead is passed on
-      consent_share_text: offerShareText(offer.title, category.name),
+      consent_share_text: LAND_SHARE_TEXT,
       consent_call: true,
       consent_at: new Date().toISOString(),
-      user_id: user?.id ?? null,
+      doi_token: token,
     })
     .select('id')
     .single()
 
   if (error || !lead) {
-    console.error('offer inquiry insert failed', error)
+    console.error('land lead insert failed', error)
     return { ok: false, error: 'Die Anfrage konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.' }
   }
 
-  const { data: cat } = await supabase.from('categories').select('id').eq('slug', category.slug).maybeSingle()
-  if (cat) await supabase.from('lead_categories').insert({ lead_id: lead.id, category_id: cat.id })
-
-  await unlockOffers()
-
-  const deadline = iabYear ? formatDeadline(iabYear) : null
-  await sendLeadAdminNotification({
-    id: lead.id, name, email, phone, company,
-    amountLabel: null, deadline, goalLabel: null,
-    categoryNames: [category.name], source: 'angebot',
-    extra: [
-      ['Angebot', offer.title],
-      ['Rechtsform', legalLabel],
-      ['Investition', `${formatEuro(investment)} netto`],
-      ['Zeitpunkt', timingLabel],
-      ['Telefon-Einwilligung', 'ja'],
-    ],
-  }).catch((e) => console.error('offer inquiry admin mail failed', e))
-
-  return { ok: true, unlocked: true }
+  const extra: [string, string][] = [
+    ['Fläche', `${area.toLocaleString('de-DE')} ha`],
+    ['PLZ', plz],
+    ['Art', typeLabel],
+    ['Netz', gridLabel],
+    ['Double-Opt-in', 'ausstehend'],
+  ]
+  const mail = { id: lead.id, name, email, phone, company: null, amountLabel: null, deadline: null, goalLabel: null, categoryNames: [], source: 'flaeche', extra }
+  await Promise.allSettled([sendLeadAdminNotification(mail), sendLeadDoi({ ...mail, token })]).then((rs) =>
+    rs.forEach((r) => r.status === 'rejected' && console.error('land lead mail failed', r.reason))
+  )
+  return { ok: true }
 }
+

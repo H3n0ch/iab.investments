@@ -2,24 +2,56 @@
 
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { track } from '@/lib/track'
 import { openModal } from './SiteModal'
 
 // Other audiences (admin, providers, tax advisors) or pages that are forms themselves
-const HIDDEN_PREFIXES = ['/admin', '/login', '/registrieren', '/passwort', '/anbieter', '/steuerberater']
+const HIDDEN_PREFIXES = ['/admin', '/login', '/registrieren', '/passwort', '/anbieter', '/steuerberater', '/anfrage']
 const SHOW_AFTER_PX = 400
 
+/**
+ * Pages with an inquiry form (`#anfrage`) get a sticky CTA to it – a bottom bar on mobile, a button on desktop –
+ * hidden while the form itself is on screen. All other pages keep the „Kontakt aufnehmen“ button.
+ */
 export function FloatingContact() {
   const pathname = usePathname()
-  const [visible, setVisible] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  // Set by the observer of this page's form; stale values from a previous page are ignored via `path`
+  const [formView, setFormView] = useState<{ path: string; inView: boolean } | null>(null)
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > SHOW_AFTER_PX)
+    const onScroll = () => setScrolled(window.scrollY > SHOW_AFTER_PX)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  if (!visible || HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
+  useEffect(() => {
+    const form = document.getElementById('anfrage')
+    if (!form) return
+    // The observer reports the initial state right away, so pages with a form are detected without an extra render
+    const io = new IntersectionObserver(([e]) => setFormView({ path: pathname, inView: e.isIntersecting }), { threshold: 0.1 })
+    io.observe(form)
+    return () => io.disconnect()
+  }, [pathname])
+  const hasForm = formView?.path === pathname
+  const formInView = hasForm && formView.inView
+
+  if (!scrolled || HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
+
+  if (hasForm) {
+    if (formInView) return null
+    return (
+      <a
+        href="#anfrage"
+        onClick={() => track('Sticky CTA')}
+        className="animate-fade-up print:hidden fixed inset-x-0 bottom-0 z-30 flex items-center justify-center gap-2 bg-emerald-600 px-4 py-3.5 text-center font-bold text-white shadow-[0_-4px_16px_rgba(0,0,0,0.12)] hover:bg-emerald-500 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:rounded-full sm:px-5 sm:py-3 sm:shadow-xl sm:shadow-emerald-900/25"
+      >
+        <span className="text-sm sm:text-base">Unterlagen & Kalkulation anfordern</span>
+        <span className="hidden text-xs font-medium text-emerald-100 sm:inline">kostenlos</span>
+      </a>
+    )
+  }
 
   return (
     <button

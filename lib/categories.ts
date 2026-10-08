@@ -16,8 +16,10 @@ export type Category = {
   image?: { src: string; alt: string; position?: string; source: string; /** Required by licences like CC BY-SA */ credit?: string }
   /** High demand right now – shown as „Gefragt“ badge */
   popular?: boolean
-  /** No vetted providers yet: shows „Anbieter in Prüfung“ and collects pre-registrations */
+  /** No buyer for leads yet: shows „Bald verfügbar“ plus the sample project and collects pre-registrations */
   comingSoon?: boolean
+  /** Realistic example for comingSoon categories – always labelled „Beispiel“, never presented as a real offer */
+  sampleProject?: { title: string; location: string; text: string; facts: [string, string][] }
   /** Prominent risk note on the category page */
   riskNote?: string
   seoTitle: string
@@ -174,6 +176,13 @@ export const CATEGORIES: Category[] = [
   },
   {
     slug: 'wohnmobil-iab',
+    comingSoon: true,
+    sampleProject: {
+      title: 'Teilintegriertes Wohnmobil in einer Vermietflotte',
+      location: 'Musterbeispiel',
+      text: 'Sie kaufen ein neues Wohnmobil, eine Vermietstation nimmt es für mehrere Jahre in ihre Flotte auf. Buchung, Übergabe, Reinigung und Versicherung übernimmt die Station, die Mieteinnahmen werden geteilt.',
+      facts: [['Kaufpreis', 'ca. 75.000 € netto'], ['Möglicher IAB', 'bis 37.500 €'], ['Vermietung', 'über Vermietstation'], ['Nutzung', 'mind. 90 % betrieblich']],
+    },
     name: 'Vermietete Wohnmobile',
     short: 'Wohnmobile und Camper in professionellen Vermietflotten',
     icon: '🚐',
@@ -210,6 +219,13 @@ export const CATEGORIES: Category[] = [
   },
   {
     slug: 'ladeinfrastruktur-iab',
+    comingSoon: true,
+    sampleProject: {
+      title: 'Zwei Ladepunkte für Firmenflotte und Kunden',
+      location: 'Musterbeispiel',
+      text: 'Zwei AC-Ladepunkte mit 22 kW am eigenen Betriebsstandort, inklusive Installation und Abrechnungssystem. Kurze Lieferzeit, auch für kleinere IAB-Beträge geeignet.',
+      facts: [['Investition', 'ca. 12.000 € netto'], ['Möglicher IAB', 'bis 6.000 €'], ['Lieferung', 'oft in 4–6 Wochen'], ['Nutzung', 'Flotte / Kunden']],
+    },
     name: 'Ladeinfrastruktur',
     short: 'Wallboxen und Schnellladesäulen für Flotte, Kunden oder öffentliches Laden',
     icon: '⚡',
@@ -246,6 +262,13 @@ export const CATEGORIES: Category[] = [
   },
   {
     slug: 'mietcontainer-iab',
+    comingSoon: true,
+    sampleProject: {
+      title: 'Paket aus fünf Bürocontainern im Vermietpool',
+      location: 'Musterbeispiel',
+      text: 'Sie kaufen fünf Bürocontainer, ein Containervermieter nimmt sie in seinen Vermietpool auf und vermietet sie an Baustellen und Industrie. Leerstand und Wartung regelt der Vertrag.',
+      facts: [['Investition', 'ca. 45.000 € netto'], ['Möglicher IAB', 'bis 22.500 €'], ['Vermietung', 'über Betreiber-Pool'], ['Nutzungsdauer', 'oft 15 Jahre+']],
+    },
     name: 'Container & Modulräume',
     short: 'Büro-, Lager- und Sanitärcontainer zur Vermietung über Betreiber',
     icon: '📦',
@@ -282,6 +305,13 @@ export const CATEGORIES: Category[] = [
   },
   {
     slug: 'werbeflaechen-iab',
+    comingSoon: true,
+    sampleProject: {
+      title: 'LED-Screen an einem frequenzstarken Standort',
+      location: 'Musterbeispiel',
+      text: 'Ein Outdoor-LED-Screen, den ein Vermarkter aufstellt, betreibt und an Werbekunden vermarktet. Sie sind an den Werbeerlösen beteiligt.',
+      facts: [['Investition', 'ca. 40.000 € netto'], ['Möglicher IAB', 'bis 20.000 €'], ['Vermarktung', 'durch Betreiber'], ['Erlöse', 'abhängig von Auslastung']],
+    },
     name: 'Digitale Werbeflächen',
     short: 'LED-Screens an frequenzstarken Standorten mit Vermarktung durch Betreiber',
     icon: '📺',
@@ -320,6 +350,12 @@ export const CATEGORIES: Category[] = [
     slug: 'krypto-mining-hardware-iab',
     // Under review: not recommended by check/calculator, not promoted on the home page
     comingSoon: true,
+    sampleProject: {
+      title: 'ASIC-Miner mit Hosting in einem deutschen Rechenzentrum',
+      location: 'Musterbeispiel',
+      text: 'Aktuelle ASIC-Miner, die ein Hosting-Anbieter in einem inländischen Rechenzentrum betreibt und wartet. Erträge schwanken mit Bitcoin-Kurs und Netzwerk-Schwierigkeit.',
+      facts: [['Investition', 'ca. 20.000 € netto'], ['Möglicher IAB', 'bis 10.000 €'], ['Standort', 'Inland (wichtig für § 7g)'], ['Risiko', 'hoch']],
+    },
     riskNote:
       'Bitcoin-Miner sind beim IAB heikel. Das Wirtschaftsgut muss im Jahr der Anschaffung und im Folgejahr vermietet oder in einer inländischen Betriebsstätte (fast) ausschließlich betrieblich genutzt werden (§ 7g Abs. 6 EStG). Bei Hosting im Ausland ist das fraglich. Erträge schwanken stark, die Hardware veraltet schnell. Keine Steuerberatung: Lassen Sie das Modell vor einer Anfrage von Ihrem Steuerberater prüfen.',
     name: 'Bitcoin-Miner & Krypto-Hardware',

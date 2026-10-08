@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { formatDeadline, iabYears } from '@/lib/iab'
+import { formatDeadline, fristPath, iabYears } from '@/lib/iab'
 
-// The strongest hook: the oldest running IAB vintage expires at the end of this year. Leads to the calculator.
+// The strongest hook: the oldest running IAB vintage expires at the end of this year. Leads to its deadline page.
 export function DeadlineBanner({ tone = 'dark', className = '' }: { tone?: 'dark' | 'light'; className?: string }) {
   const year = iabYears()[0]
   const style =
@@ -11,11 +11,11 @@ export function DeadlineBanner({ tone = 'dark', className = '' }: { tone?: 'dark
       : 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50'
   return (
     <Link
-      href="/iab-rechner"
+      href={fristPath(year)}
       className={`inline-flex flex-wrap items-center gap-x-1.5 rounded-full px-3 py-1 text-xs font-medium ring-1 transition-colors ${style} ${className}`}
     >
       <span>Frist für IAB aus dem Wirtschaftsjahr {year} endet am {formatDeadline(year)}.</span>
-      <span className="font-semibold underline underline-offset-2">Ersparnis berechnen</span>
+      <span className="font-semibold underline underline-offset-2">Frist prüfen</span>
     </Link>
   )
 }

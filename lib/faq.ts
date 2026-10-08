@@ -110,15 +110,15 @@ export const IAB_FAQ: { group: string; items: FaqItem[] }[] = [
       },
       {
         q: 'Wie wählt iab.investments die Anbieter aus?',
-        a: 'Anbieter reichen ihre Produkte bei uns ein. Wir sichten sie auf Vollständigkeit und darauf, ob es sich um bewegliche Wirtschaftsgüter handelt, die grundsätzlich für den IAB infrage kommen. Erst danach schalten wir sie frei. Eine Empfehlung oder eine Prüfung der wirtschaftlichen Qualität ist das nicht.',
+        a: 'Wir zeigen nur Projekte von Anbietern, die wir kennen und die der Darstellung zugestimmt haben. Unsere Prüfkriterien (bewegliches Wirtschaftsgut, nachvollziehbares Vertragsmodell, Standort, Referenzen) sind auf der Anbieterseite offengelegt. Eine Empfehlung oder eine Prüfung der wirtschaftlichen Qualität eines Projekts ist das nicht.',
       },
       {
-        q: 'An wie viele Anbieter werden meine Daten weitergegeben?',
-        a: 'An höchstens drei Anbieter der Kategorien, die Sie ausgewählt haben, und nur mit Ihrer ausdrücklichen Einwilligung. Die Einwilligung können Sie jederzeit per E-Mail widerrufen.',
+        q: 'An wen werden meine Daten weitergegeben?',
+        a: 'An ausgewählte Anbieter der Kategorien, die Sie gewählt haben, bei einer Projektanfrage nur an dessen Anbieter. Das geschieht nur mit Ihrer ausdrücklichen Einwilligung und nach Bestätigung Ihrer E-Mail-Adresse. Die Einwilligung können Sie jederzeit per E-Mail widerrufen.',
       },
       {
         q: 'Muss ich mich registrieren?',
-        a: 'Nein. Für eine Anfrage ist keine Registrierung nötig. Mit einem kostenlosen Konto sehen Sie zusätzlich ausführliche Angebotsdetails, Kennzahlen und Unterlagen der Anbieter.',
+        a: 'Nein. Sie brauchen weder Konto noch Passwort. Nach Ihrer kostenlosen Anfrage sehen Sie die Details aller Projekte direkt in Ihrem Browser.',
       },
       {
         q: 'Wie schnell melden sich Anbieter?',

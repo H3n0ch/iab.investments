@@ -6,6 +6,8 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { LEAD_STATUSES, type LeadStatus } from '@/lib/supabase/types'
 import { DEFAULT_COUNTRY, isCountryCode } from '@/lib/countries'
+import { splitDatasheet } from '@/lib/datasheets'
+import { redirect } from 'next/navigation'
 
 // ── Leads ─────────────────────────────────────────────────
 export async function updateLeadStatus(leadId: string, status: LeadStatus) {
@@ -41,6 +43,14 @@ export async function addLeadActivity(leadId: string, formData: FormData) {
   } else if (followUpRaw) {
     await supabase.from('leads').update({ follow_up_at: new Date(followUpRaw).toISOString() }).eq('id', leadId)
   }
+  revalidatePath('/admin', 'layout')
+}
+
+/** Deletes a lead for good (test leads, GDPR erasure requests). Categories and activities cascade. */
+export async function deleteLead(leadId: string) {
+  await requireAdmin()
+  const { error } = await getSupabaseAdmin().from('leads').delete().eq('id', leadId)
+  if (error) throw new Error(`Lead konnte nicht gelöscht werden: ${error.message}`)
   revalidatePath('/admin', 'layout')
 }
 
@@ -82,33 +92,57 @@ function parseDocuments(v: FormDataEntryValue | null) {
     .filter((d): d is { label: string; url: string } => Boolean(d))
 }
 
-export async function createOffer(formData: FormData) {
-  await requireAdmin()
+/** Offer columns from the admin form (lib/datasheets.ts decides which data sheet values are public) */
+async function offerPayload(formData: FormData) {
   const supabase = getSupabaseAdmin()
   const slug = String(formData.get('category') ?? '')
   const { data: cat } = await supabase.from('categories').select('id').eq('slug', slug).single()
   if (!cat) throw new Error('Kategorie nicht gefunden – wurde supabase/schema.sql ausgeführt?')
 
   const text = (k: string) => String(formData.get(k) ?? '').trim() || null
-  await supabase.from('offers').insert({
-    category_id: cat.id,
-    title: text('title') ?? 'Ohne Titel',
-    description: text('description'),
-    location: text('location'),
-    country: countryOf(formData),
-    min_investment_cents: euroToCents(formData.get('min_investment')),
-    expected_yield: text('expected_yield'),
-    availability: text('availability'),
-    image_url: text('image_url'),
-    provider_name: text('provider_name'),
-    gallery: lines(formData.get('gallery')),
-    details: text('details'),
-    facts: parseFacts(formData.get('facts')),
-    documents: parseDocuments(formData.get('documents')),
-    is_published: formData.get('is_published') === 'on',
-  })
+  const { publicFacts, gatedFacts } = splitDatasheet(slug, (name) => String(formData.get(name) ?? ''))
+  return {
+    slug,
+    row: {
+      category_id: cat.id,
+      title: text('title') ?? 'Ohne Titel',
+      description: text('description'),
+      location: text('location'),
+      country: countryOf(formData),
+      min_investment_cents: euroToCents(formData.get('min_investment')),
+      expected_yield: text('expected_yield'),
+      availability: text('availability'),
+      image_url: text('image_url'),
+      provider_name: text('provider_name'),
+      gallery: lines(formData.get('gallery')),
+      details: text('details'),
+      public_facts: publicFacts,
+      // Data sheet values first, then free-form figures
+      facts: [...gatedFacts, ...parseFacts(formData.get('facts'))],
+      documents: parseDocuments(formData.get('documents')),
+      is_published: formData.get('is_published') === 'on',
+    },
+  }
+}
+
+export async function createOffer(formData: FormData) {
+  await requireAdmin()
+  const { slug, row } = await offerPayload(formData)
+  const { error } = await getSupabaseAdmin().from('offers').insert(row)
+  if (error) throw new Error(`Angebot konnte nicht gespeichert werden: ${error.message}`)
   revalidatePath('/admin/offers')
   revalidatePath(`/${slug}`)
+}
+
+export async function updateOffer(offerId: string, formData: FormData) {
+  await requireAdmin()
+  const { slug, row } = await offerPayload(formData)
+  const { error } = await getSupabaseAdmin().from('offers').update(row).eq('id', offerId)
+  if (error) throw new Error(`Angebot konnte nicht gespeichert werden: ${error.message}`)
+  revalidatePath('/admin/offers')
+  revalidatePath(`/${slug}`)
+  revalidatePath(`/${slug}/${offerId}`)
+  redirect('/admin/offers')
 }
 
 export async function setOfferPublished(offerId: string, slug: string, published: boolean) {

@@ -55,7 +55,7 @@ export function Footer() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Info</p>
           <ul className="mt-3 space-y-1.5 text-sm">
-            <li><Link href="/angebote" className="text-slate-600 hover:text-slate-900">IAB-Marktplatz: alle Angebote</Link></li>
+            <li><Link href="/angebote" className="text-slate-600 hover:text-slate-900">Aktuelle Projekte</Link></li>
             <li><Link href="/iab-rechner" className="text-slate-600 hover:text-slate-900">IAB-Rechner</Link></li>
             <li><Link href="/iab-aufloesen" className="text-slate-600 hover:text-slate-900">IAB auflösen: Kosten und Auswege</Link></li>
             <li><Link href="/so-funktionierts" className="text-slate-600 hover:text-slate-900">So funktioniert&apos;s</Link></li>

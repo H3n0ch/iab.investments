@@ -3,12 +3,24 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  /* Height of the fixed header (components/Header.tsx: h-[68px] lg:h-[84px]) */
+  --header-h: 68px;
+}
+@media (min-width: 64rem) {
+  :root { --header-h: 84px; }
+}
+
+/* Dark hero sections slide under the fixed header (like the home page); the header turns transparent above them.
+   Pages without such a section keep a solid header – see the :has() variants in Header.tsx. */
+@utility hero-under-header {
+  margin-top: calc(var(--header-h) * -1);
+  padding-top: var(--header-h);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-open-sans);
+  --font-sans: var(--font-figtree);
 }
 
 /* Brand green: a calm, slightly deep green – less saturated than a "check mark" green so it reads premium, not discount.

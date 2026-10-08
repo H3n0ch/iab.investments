@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ModalButton } from '@/components/ModalButton'
 import { GuideCards } from '@/components/GuideCards'
 import { guidesBySlug } from '@/lib/wissen'
 import { Faq, FaqJsonLd } from '@/components/Faq'
 import { CATEGORIES } from '@/lib/categories'
 import { ALL_IAB_FAQ, IAB_FAQ } from '@/lib/faq'
+import { FristCta } from '@/components/FristCta'
 
 export const metadata: Metadata = {
   title: 'IAB FAQ: Häufige Fragen zum Investitionsabzugsbetrag (§ 7g EStG)',
@@ -66,12 +66,7 @@ export default function IabFaqPage() {
         <GuideCards guides={guidesBySlug(['investitionsabzugsbetrag', 'sonderabschreibung-7g', 'bewegliche-wirtschaftsgueter', 'iab-rechtsform-gmbh-freiberufler'])} columns={2} />
       </section>
 
-      <div className="mt-12 rounded-2xl bg-slate-900 p-6 text-white">
-        <p className="text-lg font-bold">Frist läuft? Alle Angebote mit Kennzahlen und Unterlagen sehen.</p>
-        <ModalButton modal="register" className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 font-semibold hover:bg-emerald-500">
-          Kostenlos registrieren
-        </ModalButton>
-      </div>
+      <FristCta className="mt-12" />
 
       <p className="mt-8 text-xs text-slate-400">
         Diese Antworten dienen der allgemeinen Information und ersetzen keine Steuerberatung. Stand: Oktober 2026.

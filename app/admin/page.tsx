@@ -5,11 +5,27 @@ import type { LeadStatus } from '@/lib/supabase/types'
 
 // Overview adapted from TinyMarket's app/admin/dashboard: key figures, lead sources, most viewed offers, newest leads.
 
-type LeadLite = { id: string; name: string; source: string | null; status: LeadStatus; follow_up_at: string | null; created_at: string }
+type LeadLite = {
+  id: string
+  name: string
+  source: string | null
+  status: LeadStatus
+  follow_up_at: string | null
+  created_at: string
+  landing_path: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  gclid: string | null
+  consent_share: boolean
+  doi_confirmed_at: string | null
+  lead_categories: { categories: { name: string } | null }[] | null
+}
 
 const SOURCE_GROUPS = [
-  { label: 'Angebotsanfragen', match: (s: string | null) => !['registrierung', 'kontakt', 'rechner', 'frist'].includes(s ?? '') },
+  { label: 'Angebotsanfragen', match: (s: string | null) => !['registrierung', 'kontakt', 'rechner', 'frist', 'ratgeber', 'flaeche'].includes(s ?? '') },
   { label: '🔥 Frist-Leads', match: (s: string | null) => s === 'frist' },
+  { label: 'Ratgeber-Anfragen', match: (s: string | null) => s === 'ratgeber' },
+  { label: '🌾 Flächen-Leads', match: (s: string | null) => s === 'flaeche' },
   { label: 'Registrierungen', match: (s: string | null) => s === 'registrierung' },
   { label: 'Kontaktanfragen', match: (s: string | null) => s === 'kontakt' },
   { label: 'Rechner-Berichte', match: (s: string | null) => s === 'rechner' },
@@ -27,12 +43,39 @@ function since(days: number): number {
   return Date.now() - days * 86400000
 }
 
+/** Traffic channel of a lead – the basis for the 100-leads mix (organic / paid / partner) */
+function channel(l: LeadLite): 'Paid' | 'Partner' | 'Kampagne' | 'Organisch' {
+  if (l.gclid || /^(cpc|ppc|paid)/i.test(l.utm_medium ?? '')) return 'Paid'
+  if (l.utm_source?.startsWith('partner:')) return 'Partner'
+  if (l.utm_source) return 'Kampagne'
+  return 'Organisch'
+}
+const CHANNELS = ['Organisch', 'Paid', 'Partner', 'Kampagne'] as const
+
+type Agg = { leads: number; doi: number }
+function aggregate(rows: LeadLite[], key: (l: LeadLite) => string[]): [string, Agg][] {
+  const m = new Map<string, Agg>()
+  for (const l of rows) {
+    for (const k of key(l)) {
+      const e = m.get(k) ?? { leads: 0, doi: 0 }
+      e.leads += 1
+      if (l.doi_confirmed_at) e.doi += 1
+      m.set(k, e)
+    }
+  }
+  return [...m.entries()].sort((a, b) => b[1].leads - a[1].leads)
+}
+
 export default async function AdminDashboard() {
   await requireAdmin()
   const supabase = getSupabaseAdmin()
 
   const [leadsRes, usersRes, offersRes, providersRes, partnersRes, viewsRes] = await Promise.all([
-    supabase.from('leads').select('id, name, source, status, follow_up_at, created_at').order('created_at', { ascending: false }).limit(2000),
+    supabase
+      .from('leads')
+      .select('id, name, source, status, follow_up_at, created_at, landing_path, utm_source, utm_medium, gclid, consent_share, doi_confirmed_at, lead_categories(categories(name))')
+      .order('created_at', { ascending: false })
+      .limit(5000),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
     supabase.from('offers').select('id', { count: 'exact', head: true }).eq('is_published', true),
     supabase.from('provider_submissions').select('id', { count: 'exact', head: true }).eq('status', 'neu'),
@@ -44,7 +87,7 @@ export default async function AdminDashboard() {
     return <p className="p-6 text-sm text-red-600">Daten konnten nicht geladen werden: {leadsRes.error.message}</p>
   }
 
-  const leads = (leadsRes.data ?? []) as LeadLite[]
+  const leads = (leadsRes.data ?? []) as unknown as LeadLite[]
   const week = since(7)
   const month = since(30)
   const endOfToday = new Date().setHours(23, 59, 59, 999)
@@ -86,6 +129,36 @@ export default async function AdminDashboard() {
     byOffer.set(v.offer_id, e)
   }
   const topOffers = [...byOffer.entries()].sort((a, b) => b[1].views - a[1].views).slice(0, 5)
+
+  // Conversion per page and category (inquiries only, last 30 days). Visitors per page: Plausible.
+  const inquiries30 = leads.filter((l) => l.consent_share && new Date(l.created_at).getTime() > month)
+  const byPage = aggregate(inquiries30, (l) => [l.landing_path ?? '(unbekannt)']).slice(0, 12)
+  const byCategory = aggregate(inquiries30, (l) => (l.lead_categories ?? []).map((c) => c.categories?.name ?? '').filter(Boolean))
+
+  // Channel mix per month (last 6 months) – organic vs. paid vs. tax advisor partners
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date()
+    d.setDate(1)
+    d.setMonth(d.getMonth() - i)
+    return d.toISOString().slice(0, 7)
+  })
+  const inquiries = leads.filter((l) => l.consent_share)
+  const mix = months.map((m) => {
+    const inMonth = inquiries.filter((l) => l.created_at.slice(0, 7) === m)
+    return {
+      month: m,
+      total: inMonth.length,
+      doi: inMonth.filter((l) => l.doi_confirmed_at).length,
+      byChannel: Object.fromEntries(CHANNELS.map((c) => [c, inMonth.filter((l) => channel(l) === c).length])) as Record<(typeof CHANNELS)[number], number>,
+    }
+  })
+
+  // Tax advisor partners: leads per referral code (basis for the tipster commission)
+  const byPartner = aggregate(
+    inquiries.filter((l) => l.utm_source?.startsWith('partner:')),
+    (l) => [l.utm_source!.slice('partner:'.length)],
+  )
+  const rate = (a: Agg) => (a.leads ? `${Math.round((a.doi / a.leads) * 100)} %` : '–')
 
   const card = 'rounded-2xl border border-slate-200 bg-white shadow-sm'
 
@@ -156,6 +229,79 @@ export default async function AdminDashboard() {
             </ul>
           )}
         </section>
+      </div>
+
+      <section className={card}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-100 px-5 py-3">
+          <h2 className="text-sm font-semibold text-slate-900">📈 Anfragen pro Monat nach Kanal</h2>
+          <p className="text-xs text-slate-400">
+            Ziel: 100 Leads/Monat. Besucherzahlen: Plausible.{' '}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- CSV download from a route handler, not a page */}
+            <a href="/admin/export/ads-conversions" className="font-semibold text-emerald-700 hover:underline">
+              Google-Ads-Conversions (CSV)
+            </a>
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <thead>
+              <tr className="text-left text-xs text-slate-400">
+                <th className="px-5 py-2 font-medium">Monat</th>
+                {CHANNELS.map((c) => (
+                  <th key={c} className="px-3 py-2 text-right font-medium">{c}</th>
+                ))}
+                <th className="px-3 py-2 text-right font-medium">Gesamt</th>
+                <th className="px-5 py-2 text-right font-medium">DOI ✓</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 tabular-nums">
+              {mix.map((r) => (
+                <tr key={r.month}>
+                  <td className="px-5 py-2.5 font-medium text-slate-800">{r.month}</td>
+                  {CHANNELS.map((c) => (
+                    <td key={c} className="px-3 py-2.5 text-right text-slate-700">{r.byChannel[c]}</td>
+                  ))}
+                  <td className="px-3 py-2.5 text-right font-semibold text-slate-900">{r.total}</td>
+                  <td className="px-5 py-2.5 text-right text-emerald-700">{r.doi}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {[
+          { title: 'Anfragen nach Seite (30 Tage)', rows: byPage, empty: 'Noch keine Anfragen in den letzten 30 Tagen.' },
+          { title: 'Anfragen nach Kategorie (30 Tage)', rows: byCategory, empty: 'Noch keine Anfragen in den letzten 30 Tagen.' },
+          { title: 'Steuerberater-Partner (gesamt)', rows: byPartner, empty: 'Noch keine Anfragen über Partner-Links.' },
+        ].map((t) => (
+          <section key={t.title} className={card}>
+            <h2 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900">{t.title}</h2>
+            {t.rows.length === 0 ? (
+              <p className="px-5 py-6 text-center text-sm text-slate-400">{t.empty}</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-slate-400">
+                    <th className="px-5 py-2 font-medium">&nbsp;</th>
+                    <th className="px-3 py-2 text-right font-medium">Anfragen</th>
+                    <th className="px-5 py-2 text-right font-medium">DOI-Quote</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 tabular-nums">
+                  {t.rows.map(([k, a]) => (
+                    <tr key={k}>
+                      <td className="max-w-0 truncate px-5 py-2.5 font-medium text-slate-800" title={k}>{k}</td>
+                      <td className="px-3 py-2.5 text-right text-slate-700">{a.leads}</td>
+                      <td className="px-5 py-2.5 text-right text-slate-700">{rate(a)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
+        ))}
       </div>
 
       <section className={card}>

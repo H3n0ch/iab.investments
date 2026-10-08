@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { signOut } from '@/lib/actions/auth'
 import { createClient } from '@/lib/supabase/client'
-import { ModalButton } from './ModalButton'
+import { fristPath, iabYears } from '@/lib/iab'
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY)
 
@@ -45,28 +45,29 @@ export function AuthNav() {
         <UserIcon />
         <span className="hidden sm:inline">Anmelden</span>
       </Link>
-      <ModalButton
-        modal="register"
+      <Link
+        href={fristPath(iabYears()[0])}
         // Phones: in the header's menu instead, the bar is too narrow
         className={`${register} hidden sm:flex`}
       >
-        <RegisterContent />
-      </ModalButton>
+        <HeaderCtaContent />
+      </Link>
     </>
   )
 }
 
-// Outlined pill like "Anmelden", with a check (= free, no risk); without display so callers pick flex/hidden
+// Outlined pill like "Anmelden", with a check (= free, no risk); without display so callers pick flex/hidden.
+// Leads to the deadline check – one message site-wide: free inquiry, no password, no account needed.
 export const register =
   'h-11 items-center gap-2 whitespace-nowrap rounded-full px-5 text-[15px] font-semibold text-white ring-[1.5px] ring-white/50 transition-colors hover:bg-white/10 lg:h-12'
 
-export function RegisterContent() {
+export function HeaderCtaContent() {
   return (
     <>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden>
         <path d="M5 12.5l4.5 4.5L19 7.5" />
       </svg>
-      Kostenlos registrieren
+      Frist prüfen
     </>
   )
 }

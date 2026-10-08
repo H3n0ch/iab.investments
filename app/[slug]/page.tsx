@@ -45,7 +45,7 @@ export default async function CategoryPage({ params }: PageProps<'/[slug]'>) {
   return (
     <>
       {/* Compact header – the offer list is the main content */}
-      <section className="relative overflow-hidden bg-slate-900">
+      <section className="hero-under-header relative overflow-hidden bg-slate-900">
         {c.image && (
           <>
             <Image
@@ -92,7 +92,7 @@ export default async function CategoryPage({ params }: PageProps<'/[slug]'>) {
         </div>
       )}
 
-      {/* Offer list – layout adapted from TinyMarket's marketplace */}
+      {/* Project list */}
       <section className="mx-auto max-w-6xl px-4 py-8">
         <OfferList category={c} offers={offers} />
       </section>
@@ -101,12 +101,12 @@ export default async function CategoryPage({ params }: PageProps<'/[slug]'>) {
       <section id="anfrage" className="mx-auto max-w-3xl scroll-mt-20 px-4 pb-12">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-lg font-bold text-slate-900">
-            {c.comingSoon ? `Für ${c.name} vormerken` : 'Nichts Passendes dabei? Allgemein anfragen'}
+            {c.comingSoon ? `Für ${c.name} vormerken` : 'Unterlagen & Kalkulation anfordern'}
           </p>
           <p className="mb-4 mt-1 text-sm text-slate-500">
             {c.comingSoon
-              ? 'Wir melden uns, sobald ein geprüfter Anbieter verfügbar ist. Kostenlos und unverbindlich.'
-              : `Passende Anbieter für ${c.name} melden sich bei Ihnen, auch mit Angeboten, die noch nicht online sind. Kostenlos und unverbindlich.`}
+              ? 'Wir melden uns, sobald das erste freigegebene Projekt verfügbar ist. Kostenlos und unverbindlich.'
+              : `Wir senden Ihnen passende Projekte für ${c.name}, auch solche, die noch nicht online sind, und melden uns persönlich.`}
           </p>
           <LeadForm preselected={[c.slug]} source="landing" submitLabel={c.comingSoon ? 'Kostenlos vormerken' : undefined} />
         </div>

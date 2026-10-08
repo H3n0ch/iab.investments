@@ -1,13 +1,13 @@
 'use client'
 
-// Header in the style of Milk the Sun: logo left, white pill navigation in the middle, outlined pill buttons right.
-// Transparent on every page; once scrolled it turns into frosted glass (navy only with the mobile menu open). On the home page it floats over the hero photo.
+// Header: logo left, white pill navigation in the middle, outlined pill buttons right.
+// Fixed on every page. Over a dark hero (.hero-under-header, e.g. home, categories, deadline pages) it starts transparent
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { AuthNav, RegisterContent, register } from './AuthNav'
-import { ModalButton } from './ModalButton'
+import { fristPath, iabYears } from '@/lib/iab'
+import { AuthNav, HeaderCtaContent, register } from './AuthNav'
 
 export function Logo({ dark = false }: { dark?: boolean }) {
   return (
@@ -19,18 +19,21 @@ export function Logo({ dark = false }: { dark?: boolean }) {
 
 const NAV = [
   { href: '/', label: 'Startseite' },
-  { href: '/angebote', label: 'Marktplatz' },
+  { href: '/angebote', label: 'Projekte' },
   { href: '/iab-rechner', label: 'IAB-Rechner' },
   { href: '/ratgeber', label: 'Wissen' },
   { href: '/so-funktionierts', label: "So funktioniert's" },
-  { href: '/anbieter', label: 'Für Anbieter' },
+  { href: '/iab-aufloesen', label: 'IAB auflösen' },
 ]
+
+const SOLID = 'bg-slate-900/95 shadow-lg shadow-slate-950/20 backdrop-blur'
 
 const isActive = (pathname: string, href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`))
 
 export function Header() {
   const pathname = usePathname() ?? ''
-  const home = pathname === '/'
+  // Ad landing pages (/lp/…): logo only, no navigation that leads away from the form
+  const landing = pathname.startsWith('/lp/')
   const [scrolled, setScrolled] = useState(false)
   const [menu, setMenu] = useState(false)
 
@@ -53,12 +56,14 @@ export function Header() {
 
   return (
     <header
-      className={`${home ? 'fixed inset-x-0' : 'sticky'} top-0 z-40 transition-colors duration-300 ${
+      // Always fixed. Over a dark hero (.hero-under-header) it starts transparent and turns into frosted glass when
+      // scrolled; on pages without a hero it stays solid navy so the white logo and buttons remain readable.
+      className={`fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
         transparent
-          ? 'bg-transparent'
+          ? `${SOLID} [body:has(.hero-under-header)_&]:bg-transparent [body:has(.hero-under-header)_&]:shadow-none [body:has(.hero-under-header)_&]:backdrop-blur-none`
           : frosted
-            ? 'bg-slate-900/25 shadow-[inset_0_-1px_0_rgb(255_255_255/0.1)] backdrop-blur-md backdrop-saturate-150'
-            : 'bg-slate-900/95 shadow-lg shadow-slate-950/20 backdrop-blur'
+            ? `${SOLID} [body:has(.hero-under-header)_&]:bg-slate-900/25 [body:has(.hero-under-header)_&]:shadow-[inset_0_-1px_0_rgb(255_255_255/0.1)] [body:has(.hero-under-header)_&]:backdrop-blur-md [body:has(.hero-under-header)_&]:backdrop-saturate-150`
+            : SOLID
       }`}
     >
       <div className="mx-auto flex h-[68px] max-w-[1480px] items-center justify-between gap-4 px-4 sm:px-[clamp(16px,3vw,56px)] lg:h-[84px]">
@@ -66,6 +71,7 @@ export function Header() {
           <Logo />
         </Link>
 
+        {!landing && (
         <nav aria-label="Hauptnavigation" className="hidden rounded-full bg-white p-1.5 shadow-[0_16px_40px_-18px_rgb(5_20_40/0.6)] lg:block">
           <ul className="flex items-center gap-0.5">
             {NAV.map((n) => (
@@ -83,7 +89,9 @@ export function Header() {
             ))}
           </ul>
         </nav>
+        )}
 
+        {!landing && (
         <div className="flex shrink-0 items-center gap-2">
           <AuthNav />
           <button
@@ -98,9 +106,10 @@ export function Header() {
             </svg>
           </button>
         </div>
+        )}
       </div>
 
-      {menu && (
+      {menu && !landing && (
         <nav aria-label="Hauptnavigation" className="border-t border-white/10 px-4 pb-4 lg:hidden">
           <ul className="mx-auto max-w-7xl space-y-1 pt-3">
             {NAV.map((n) => (
@@ -117,12 +126,12 @@ export function Header() {
               </li>
             ))}
           </ul>
-          <ModalButton
-            modal="register"
+          <Link
+            href={fristPath(iabYears()[0])}
             className={`${register} mx-auto mt-3 flex w-full max-w-7xl justify-center sm:hidden`}
           >
-            <RegisterContent />
-          </ModalButton>
+            <HeaderCtaContent />
+          </Link>
         </nav>
       )}
     </header>

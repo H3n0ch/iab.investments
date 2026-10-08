@@ -2,13 +2,14 @@ import 'server-only'
 import { createPublicClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import type { GatedOfferData, MarketOffer, OfferDocument, OfferFact, PublicOffer } from '@/lib/supabase/types'
 import { getAllDemoOffers, getDemoOffer, getDemoOffers } from '@/lib/demo-offers'
+import { personalKeys } from '@/lib/datasheets'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 // Local preview only: example offers until Supabase is configured. Never in production.
 export const useDemo = !isSupabaseConfigured && process.env.NODE_ENV === 'development'
 
 const PUBLIC_COLUMNS =
-  'id, category_id, title, description, location, country, min_investment_cents, expected_yield, availability, image_url, gallery, is_published, created_at'
+  'id, category_id, title, description, location, country, min_investment_cents, expected_yield, availability, image_url, gallery, public_facts, is_published, created_at'
 
 export async function getOffersForCategory(slug: string): Promise<PublicOffer[]> {
   if (useDemo) return getDemoOffers(slug)
@@ -58,10 +59,10 @@ export async function getPublicOffer(slug: string, id: string): Promise<PublicOf
   return offer
 }
 
-/** Labels of the key facts are public (shown with a lock); values only for registered users. */
-export async function getOfferFactLabels(slug: string, id: string): Promise<string[]> {
+/** Labels (and data sheet keys) of the gated facts are public – shown blurred; values only after the inquiry. */
+export async function getOfferFactLabels(slug: string, id: string): Promise<OfferFact[]> {
   const gated = await loadGated(slug, id)
-  return gated?.facts.map((f) => f.label) ?? []
+  return gated?.facts.map((f) => ({ key: f.key, label: f.label, value: '' })) ?? []
 }
 
 /**
@@ -82,9 +83,15 @@ async function loadGated(slug: string, id: string): Promise<GatedOfferData | nul
     .eq('is_published', true)
     .maybeSingle()
   if (!data) return null
+  // Provider-identifying fields (operator, manufacturer, exact site) never reach the browser – not even after
+  // the inquiry. The label stays, so the page can say „im persönlichen Gespräch“.
+  const personal = personalKeys(slug)
+  const facts = (Array.isArray(data.facts) ? (data.facts as OfferFact[]) : []).map((f) =>
+    f.key && personal.has(f.key) ? { key: f.key, label: f.label, value: '' } : f,
+  )
   return {
     details: data.details ?? null,
-    facts: Array.isArray(data.facts) ? (data.facts as OfferFact[]) : [],
+    facts,
     documents: Array.isArray(data.documents) ? (data.documents as OfferDocument[]) : [],
   }
 }

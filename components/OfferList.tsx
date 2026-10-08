@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { CATEGORIES, formatEuro, type Category } from '@/lib/categories'
+import { cardFacts } from '@/lib/datasheets'
 import type { PublicOffer } from '@/lib/supabase/types'
 import { Flag } from './Flag'
 
@@ -69,24 +70,20 @@ export function OfferList({ category: c, offers }: Props) {
     </nav>
   )
 
-  const emptyState = (
+  const emptyState = c.comingSoon ? (
+    <ComingSoonState category={c} />
+  ) : (
     <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
       <p className="text-base font-medium text-slate-700">
-        {c.comingSoon
-          ? 'Anbieter in Prüfung'
-          : offers.length === 0
-            ? 'Aktuell sind noch keine Angebote online'
-            : 'Keine Angebote für diesen Filter'}
+        {offers.length === 0 ? 'Aktuell sind noch keine Projekte online' : 'Keine Projekte für diesen Filter'}
       </p>
       <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
-        {c.comingSoon
-          ? 'Wir prüfen gerade Anbieter auf Standort, Vertragsmodell und Steuerkonzept. Merken Sie sich vor, dann melden wir uns, sobald ein geprüftes Angebot verfügbar ist.'
-          : offers.length === 0
-          ? 'Senden Sie eine unverbindliche Anfrage, dann melden sich passende Anbieter direkt bei Ihnen, auch mit Angeboten, die noch nicht online sind.'
+        {offers.length === 0
+          ? 'Fordern Sie unverbindlich Unterlagen an. Wir melden uns mit passenden Projekten, auch solchen, die noch nicht online sind.'
           : 'Passen Sie die Filter an oder senden Sie eine allgemeine Anfrage.'}
       </p>
       <a href="#anfrage" className="mt-5 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
-        {c.comingSoon ? 'Jetzt vormerken' : 'Jetzt anfragen'}
+        Jetzt anfragen
       </a>
     </div>
   )
@@ -96,7 +93,7 @@ export function OfferList({ category: c, offers }: Props) {
       {/* ── Desktop sidebar ──────────────────────────────── */}
       <aside className="hidden w-60 shrink-0 lg:block">
         <Link href="/angebote" className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
-          ← Alle Angebote im Marktplatz
+          ← Alle Projekte
         </Link>
         <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Investitionsgüter</p>
         {categoryNav}
@@ -150,7 +147,7 @@ export function OfferList({ category: c, offers }: Props) {
         {/* ── Results header ──────────────────────────────── */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-slate-500">
-            Aktuelle Angebote für <span className="font-semibold text-slate-900">{c.name}</span>
+            {c.comingSoon ? 'Beispielprojekt für' : 'Aktuelle Projekte für'} <span className="font-semibold text-slate-900">{c.name}</span>
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <select value={maxEuro} onChange={(e) => setMaxEuro(Number(e.target.value))} className={`${selectCls} lg:hidden`} aria-label="Max. Einstieg">
@@ -173,7 +170,8 @@ export function OfferList({ category: c, offers }: Props) {
           </div>
         </div>
 
-        {shown.length > 0 ? (
+        {/* Categories without a lead buyer never list offers – only the labelled sample project */}
+        {!c.comingSoon && shown.length > 0 ? (
           <div className="space-y-4">
             {shown.map((o) => (
               <OfferCard key={o.id} offer={o} category={c} />
@@ -189,8 +187,50 @@ export function OfferList({ category: c, offers }: Props) {
   )
 }
 
+/** „Bald verfügbar“: a realistic sample project, clearly marked as example, plus the pre-registration CTA */
+function ComingSoonState({ category: c }: { category: Category }) {
+  const s = c.sampleProject
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <strong>Bald verfügbar.</strong> Für {c.name} sprechen wir gerade mit Anbietern. Merken Sie sich kostenlos vor, dann melden wir uns
+        mit dem ersten freigegebenen Projekt.
+      </div>
+      {s && (
+        <div className="overflow-hidden rounded-xl border border-dashed border-slate-300 bg-white">
+          <div className="flex flex-col sm:flex-row">
+            <div className={`relative h-40 w-full shrink-0 bg-linear-to-br sm:h-auto sm:w-64 ${c.gradient}`}>
+              {c.image && (
+                <Image src={c.image.src} alt={c.image.alt} fill sizes="(min-width: 640px) 256px, 100vw" className="object-cover opacity-80" style={{ objectPosition: c.image.position }} />
+              )}
+              <span className="absolute left-2 top-2 rounded-full bg-slate-900 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">Beispiel</span>
+            </div>
+            <div className="flex-1 p-4 sm:p-5">
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{s.location} · kein reales Angebot</p>
+              <h3 className="mt-1 text-lg font-bold leading-tight text-slate-900">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{s.text}</p>
+              <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {s.facts.map(([k, v]) => (
+                  <div key={k} className="rounded-lg bg-slate-50 px-2.5 py-2">
+                    <dt className="text-[11px] text-slate-400">{k}</dt>
+                    <dd className="text-sm font-semibold text-slate-800">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </div>
+      )}
+      <a href="#anfrage" className="inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500">
+        Jetzt vormerken
+      </a>
+    </div>
+  )
+}
+
 export function OfferCard({ offer: o, category: c }: { offer: PublicOffer; category: Category }) {
   const price = o.min_investment_cents != null ? formatEuro(o.min_investment_cents / 100) : null
+  const facts = cardFacts(c.slug, o.public_facts ?? [])
   const excerpt = o.description ? o.description.slice(0, 160).trimEnd() + (o.description.length > 160 ? '…' : '') : null
 
   const priceBlock = (compact: boolean) => (
@@ -252,7 +292,15 @@ export function OfferCard({ offer: o, category: c }: { offer: PublicOffer; categ
             </div>
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-700 sm:text-sm">
-              <span>{c.yieldProfile}</span>
+              {facts.length > 0 ? (
+                facts.map((f) => (
+                  <span key={f.label}>
+                    <span className="text-slate-400">{f.label}:</span> <span className="font-semibold">{f.value}</span>
+                  </span>
+                ))
+              ) : (
+                <span>{c.yieldProfile}</span>
+              )}
             </div>
 
             {excerpt && <p className="line-clamp-2 text-xs leading-relaxed text-slate-500 sm:text-sm">{excerpt}</p>}

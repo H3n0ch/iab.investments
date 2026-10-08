@@ -263,3 +263,31 @@ alter table leads add column if not exists investment_cents bigint;  -- geplante
 alter table leads add column if not exists invest_timing text;       -- sofort | dieses-jahr | naechstes-jahr | offen
 alter table leads add column if not exists consent_call boolean not null default false;
 alter table leads add column if not exists consent_share_text text;  -- exakter Wortlaut der Weitergabe-Einwilligung (Nachweis)
+
+-- ════════════════════════════════════════════════════════════
+-- Mehrstufiges Anfrageformular, Double-Opt-in & Flächen-Leads (Oktober 2026)
+-- Leads gehen an iab.investments, nicht direkt an Anbieter. Verkaufbar ist ein Lead
+-- erst mit bestätigter E-Mail (doi_confirmed_at). Kann erneut ausgeführt werden.
+-- ════════════════════════════════════════════════════════════
+alter table leads add column if not exists iab_amount_eur int;            -- exakter IAB-Betrag, 0 = noch kein IAB
+alter table leads add column if not exists budget text;                   -- lt50 | 50-100 | 100-200 | gt200
+alter table leads add column if not exists doi_token text unique;         -- Bestätigungslink, nach Klick null
+alter table leads add column if not exists doi_confirmed_at timestamptz;
+alter table leads add column if not exists lead_type text not null default 'investor';  -- investor | flaeche
+alter table leads add column if not exists land_area_ha numeric;
+alter table leads add column if not exists land_plz text;
+alter table leads add column if not exists land_type text;                -- acker | gruenland | konversion | sonstige
+-- Werbe-Attribution (Google Ads, Kampagnen)
+alter table leads add column if not exists gclid text;
+alter table leads add column if not exists utm_medium text;
+alter table leads add column if not exists utm_campaign text;
+create index if not exists leads_doi_token_idx on leads(doi_token) where doi_token is not null;
+
+-- ════════════════════════════════════════════════════════════
+-- Datenblätter pro Kategorie (Oktober 2026)
+-- Feste Felder je Kategorie (lib/datasheets.ts). Öffentliche Werte in public_facts,
+-- gesperrte Werte weiterhin in facts (erst nach Anfrage). Format je Eintrag:
+-- { "key": "leistung", "label": "Leistung", "value": "4.955 kWp" }
+-- ════════════════════════════════════════════════════════════
+alter table offers add column if not exists public_facts jsonb not null default '[]';
+grant select (public_facts) on offers to anon, authenticated;
