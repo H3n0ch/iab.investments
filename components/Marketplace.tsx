@@ -32,7 +32,7 @@ const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.N
 
 const chip = (on: boolean) =>
   `whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-    on ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
+    on ? 'border-slate-800 bg-slate-800 text-white' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400'
   }`
 
 export function Marketplace({ offers }: { offers: MarketOffer[] }) {
@@ -106,7 +106,7 @@ export function Marketplace({ offers }: { offers: MarketOffer[] }) {
                   onClick={() => switchTo(x.slug)}
                   aria-pressed={on}
                   className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                    on ? 'bg-slate-900 font-semibold text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    on ? 'bg-slate-800 font-semibold text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <span className="truncate">
@@ -135,7 +135,7 @@ export function Marketplace({ offers }: { offers: MarketOffer[] }) {
           </div>
         </div>
 
-        <div className="rounded-xl bg-slate-900 p-5 text-white">
+        <div className="rounded-xl bg-slate-800 p-5 text-white">
           <p className="text-sm font-bold">Wie viel müssen Sie investieren?</p>
           <p className="mt-1 text-xs text-slate-400">Der IAB-Rechner zeigt Steuereffekt, Investitionsvolumen und passende Kategorien.</p>
           <Link href="/iab-rechner" className="mt-3 block rounded-lg bg-emerald-500 py-2 text-center text-xs font-bold text-white transition-colors hover:bg-emerald-400">

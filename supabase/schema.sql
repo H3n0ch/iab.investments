@@ -291,3 +291,19 @@ create index if not exists leads_doi_token_idx on leads(doi_token) where doi_tok
 -- ════════════════════════════════════════════════════════════
 alter table offers add column if not exists public_facts jsonb not null default '[]';
 grant select (public_facts) on offers to anon, authenticated;
+
+-- ════════════════════════════════════════════════════════════
+-- Anfrage: Kontakt zuerst, jeder Schritt wird gespeichert (Oktober 2026)
+-- Ein Lead entsteht schon nach Schritt 1 (Name, Telefon, E-Mail + Rückruf-Einwilligung).
+-- completed_at = null heißt „unvollständig“ (nicht verkaufbar, nur Rückruf zur eigenen Anfrage).
+-- form_token erlaubt dem Browser, die weiteren Schritte zu speichern; wird beim Abschluss geleert.
+-- ════════════════════════════════════════════════════════════
+alter table leads add column if not exists completed_at timestamptz;
+alter table leads add column if not exists form_token text;
+alter table leads add column if not exists form_step text;          -- kontakt | kategorie | iab | budget | zeitpunkt | abschluss
+alter table leads add column if not exists notified_at timestamptz;  -- Sofort-Mail an Admin verschickt
+alter table leads add column if not exists reminder_sent_at timestamptz;  -- „Ihre Anfrage ist fast fertig“ verschickt
+alter table leads add column if not exists callback_time text;       -- vormittag | nachmittag | abend
+create index if not exists leads_form_token_idx on leads(form_token) where form_token is not null;
+-- Altbestand gilt als vollständig
+update leads set completed_at = created_at where completed_at is null and form_token is null;

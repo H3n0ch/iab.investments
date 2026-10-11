@@ -8,7 +8,7 @@ import { formatDeadline, fristPath, iabYears } from '@/lib/iab'
 export function FristCta({ className = '' }: { className?: string }) {
   const year = iabYears()[0]
   return (
-    <div className={`grid gap-4 rounded-3xl bg-slate-900 p-6 text-white sm:grid-cols-[1fr_auto] sm:items-center sm:p-8 ${className}`}>
+    <div className={`grid gap-4 rounded-3xl bg-slate-800 p-6 text-white sm:grid-cols-[1fr_auto] sm:items-center sm:p-8 ${className}`}>
       <div>
         <p className="text-lg font-bold">Ihr IAB aus {year} läuft am {formatDeadline(year)} ab?</p>
         <p className="mt-1 text-sm text-slate-300">

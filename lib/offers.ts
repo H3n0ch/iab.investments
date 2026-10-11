@@ -112,6 +112,93 @@ export async function recordOfferView(userId: string, offerId: string): Promise<
   }
 }
 
+export type MarketStat = {
+  slug: string
+  count: number
+  /** Lowest entry ticket in euros */
+  minEntry: number | null
+  /** Offers deliverable right away or within weeks / by year end */
+  fastCount: number
+  /** Range of the providers' stated first-year yield in % – only from 2+ offers, so no single offer is revealed */
+  yieldRange: [number, number] | null
+  /** Range of the price per kWp in € (PV) – same rule */
+  kwpPriceRange: [number, number] | null
+}
+
+const FAST_RE = /sofort|woche|bis dez|lieferbar/i
+const num = (v: string | undefined, re: RegExp) => {
+  const m = v?.replace(/\./g, '').match(re)
+  return m ? Number(m[1].replace(',', '.')) : null
+}
+const range = (xs: (number | null)[]): [number, number] | null => {
+  const v = xs.filter((x): x is number => x != null && Number.isFinite(x))
+  return v.length >= 2 ? [Math.min(...v), Math.max(...v)] : null
+}
+
+/**
+ * Market snapshot per category, computed from the data sheets of all published offers – our own data, the part of a
+ * guide page nobody else has. Aggregates only: ranges need at least two offers, so no single offer is revealed.
+ */
+export async function getMarketSnapshot(): Promise<MarketStat[]> {
+  type Row = { min_investment_cents: number | null; availability: string | null; facts: OfferFact[]; slug: string }
+  let rows: Row[] = []
+  if (useDemo) {
+    rows = getAllDemoOffers().map((o) => ({ min_investment_cents: o.min_investment_cents, availability: o.availability, facts: [], slug: o.category_slug }))
+  } else if (isSupabaseConfigured) {
+    const { data } = await getSupabaseAdmin()
+      .from('offers')
+      .select('min_investment_cents, availability, facts, categories!inner(slug)')
+      .eq('is_published', true)
+    rows = ((data ?? []) as unknown as (Omit<Row, 'slug'> & { categories: { slug: string } })[]).map((r) => ({ ...r, slug: r.categories.slug }))
+  }
+  const bySlug = new Map<string, Row[]>()
+  for (const r of rows) bySlug.set(r.slug, [...(bySlug.get(r.slug) ?? []), r])
+  return [...bySlug.entries()].map(([slug, rs]) => {
+    const fact = (r: Row, key: string) => (Array.isArray(r.facts) ? r.facts : []).find((f) => f.key === key)?.value
+    const entries = rs.map((r) => r.min_investment_cents).filter((c): c is number => c != null)
+    return {
+      slug,
+      count: rs.length,
+      minEntry: entries.length ? Math.min(...entries) / 100 : null,
+      fastCount: rs.filter((r) => r.availability && FAST_RE.test(r.availability)).length,
+      yieldRange: range(rs.map((r) => num(fact(r, 'rendite'), /(\d+(?:,\d+)?)\s*%/))),
+      kwpPriceRange: range(rs.map((r) => num(fact(r, 'preis_kwp'), /(\d+(?:,\d+)?)\s*€/))),
+    }
+  })
+}
+
+/** Offer for the in-text project preview: public data plus the keys of its gated fields – never their values */
+export type PreviewOffer = MarketOffer & { gatedKeys: string[] }
+
+/**
+ * 2–3 offers for the project preview on guide pages: given categories, quickly deliverable ones first.
+ * Gated facts are reduced to their keys here, on the server, so no locked value can reach the page.
+ */
+export async function getPreviewOffers({ slugs, limit = 3 }: { slugs: string[]; limit?: number }): Promise<PreviewOffer[]> {
+  const offers = (await getAllOffers()).filter((o) => slugs.includes(o.category_slug))
+  if (offers.length === 0) return []
+  let keysById = new Map<string, string[]>()
+  if (!useDemo && isSupabaseConfigured) {
+    const { data } = await getSupabaseAdmin()
+      .from('offers')
+      .select('id, facts')
+      .in('id', offers.map((o) => o.id))
+    keysById = new Map(
+      ((data ?? []) as { id: string; facts: OfferFact[] }[]).map((r) => [r.id, (Array.isArray(r.facts) ? r.facts : []).map((f) => f.key).filter((k): k is string => Boolean(k))]),
+    )
+  }
+  const fast = (o: MarketOffer) => (o.availability && FAST_RE.test(o.availability) ? 0 : 1)
+  // One per category first, so the preview shows the range of options, then fill up
+  const sorted = [...offers].sort((a, b) => fast(a) - fast(b))
+  const picked: MarketOffer[] = []
+  for (const slug of slugs) {
+    const o = sorted.find((x) => x.category_slug === slug && !picked.includes(x))
+    if (o) picked.push(o)
+  }
+  for (const o of sorted) if (picked.length < limit && !picked.includes(o)) picked.push(o)
+  return picked.slice(0, limit).map((o) => ({ ...o, gatedKeys: keysById.get(o.id) ?? [] }))
+}
+
 /** Published offers for the sitemap */
 export async function getPublishedOfferPaths(): Promise<{ slug: string; id: string }[]> {
   if (!isSupabaseConfigured) return []

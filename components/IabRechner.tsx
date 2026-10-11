@@ -15,7 +15,7 @@ const input =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
 const label = 'mb-1.5 block text-sm font-medium text-slate-700'
 const seg = (on: boolean) =>
-  `flex-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${on ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-white'}`
+  `flex-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${on ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-white'}`
 const card = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6'
 
 function euroIn(v: string): number {
@@ -418,7 +418,7 @@ function ReportForm({ params, iab, saving }: { params: CalcParams; iab: number; 
         <button
           type="button"
           onClick={() => window.print()}
-          className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          className="mt-4 rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
         >
           Als PDF speichern
         </button>

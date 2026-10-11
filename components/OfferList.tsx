@@ -58,7 +58,7 @@ export function OfferList({ category: c, offers }: Props) {
             key={cat.slug}
             href={`/${cat.slug}`}
             className={`flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
-              active ? 'bg-slate-900 font-semibold text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              active ? 'bg-slate-800 font-semibold text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <span className="truncate">
@@ -116,7 +116,7 @@ export function OfferList({ category: c, offers }: Props) {
           </div>
         </div>
 
-        <div className="mt-6 rounded-xl bg-slate-900 p-5 text-white">
+        <div className="mt-6 rounded-xl bg-slate-800 p-5 text-white">
           <p className="text-sm font-bold">Nichts Passendes dabei?</p>
           <p className="mt-1 text-xs text-slate-400">Anbieter melden sich auch mit Angeboten, die noch nicht online sind.</p>
           <a
@@ -136,7 +136,7 @@ export function OfferList({ category: c, offers }: Props) {
               key={cat.slug}
               href={`/${cat.slug}`}
               className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                cat.slug === c.slug ? 'bg-slate-900 text-white' : 'border border-slate-300 bg-white text-slate-600'
+                cat.slug === c.slug ? 'bg-slate-800 text-white' : 'border border-slate-300 bg-white text-slate-600'
               }`}
             >
               {cat.name}
@@ -203,7 +203,7 @@ function ComingSoonState({ category: c }: { category: Category }) {
               {c.image && (
                 <Image src={c.image.src} alt={c.image.alt} fill sizes="(min-width: 640px) 256px, 100vw" className="object-cover opacity-80" style={{ objectPosition: c.image.position }} />
               )}
-              <span className="absolute left-2 top-2 rounded-full bg-slate-900 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">Beispiel</span>
+              <span className="absolute left-2 top-2 rounded-full bg-slate-800 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-white">Beispiel</span>
             </div>
             <div className="flex-1 p-4 sm:p-5">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{s.location} · kein reales Angebot</p>

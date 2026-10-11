@@ -11,6 +11,7 @@ export default async function ConfirmedPage({ searchParams }: PageProps<'/anfrag
   const sp = await searchParams
   const status = typeof sp.status === 'string' ? sp.status : 'ok'
   const land = sp.typ === 'flaeche'
+  const reminder = sp.typ === 'erinnerung'
 
   if (status !== 'ok') {
     return (
@@ -30,11 +31,13 @@ export default async function ConfirmedPage({ searchParams }: PageProps<'/anfrag
 
   return (
     <div className="mx-auto max-w-xl px-4 py-16 text-center">
-      <TrackOnMount event="DOI bestätigt" props={{ typ: land ? 'flaeche' : 'investor' }} />
+      <TrackOnMount event="DOI bestätigt" props={{ typ: land ? 'flaeche' : reminder ? 'erinnerung' : 'investor' }} />
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-3xl text-white">✓</div>
-      <h1 className="mt-4 text-2xl font-bold text-slate-900">Danke, Ihre Anfrage ist bestätigt</h1>
+      <h1 className="mt-4 text-2xl font-bold text-slate-900">{reminder ? 'Danke, Ihre Frist-Erinnerung ist aktiv' : 'Danke, Ihre Anfrage ist bestätigt'}</h1>
       <p className="mt-3 text-slate-600">
-        {land
+        {reminder
+          ? 'Wir erinnern Sie rechtzeitig vor Fristende. Wenn Sie schon jetzt passende Projekte sehen möchten: Unterlagen gibt es kostenlos und ohne Passwort.'
+          : land
           ? 'Wir prüfen Ihre Flächenangaben und melden uns telefonisch, bevor wir sie passenden Solarpark-Projektierern vorstellen.'
           : 'Wir melden uns in Kürze telefonisch und senden Ihnen Unterlagen und Kalkulation passender Projekte. Für Sie ist das kostenlos und unverbindlich.'}
       </p>

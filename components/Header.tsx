@@ -6,8 +6,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { fristPath, iabYears } from '@/lib/iab'
 import { AuthNav, HeaderCtaContent, register } from './AuthNav'
+import { openInquiryAnywhere } from './InquiryModal'
 
 export function Logo({ dark = false }: { dark?: boolean }) {
   return (
@@ -126,12 +126,16 @@ export function Header() {
               </li>
             ))}
           </ul>
-          <Link
-            href={fristPath(iabYears()[0])}
+          <button
+            type="button"
+            onClick={() => {
+              setMenu(false)
+              openInquiryAnywhere()
+            }}
             className={`${register} mx-auto mt-3 flex w-full max-w-7xl justify-center sm:hidden`}
           >
             <HeaderCtaContent />
-          </Link>
+          </button>
         </nav>
       )}
     </header>

@@ -20,6 +20,26 @@ export const BUDGETS = [
 export type BudgetValue = (typeof BUDGETS)[number]['value']
 export const isValidBudget = (v: unknown): v is BudgetValue => BUDGETS.some((b) => b.value === v)
 
+/** Best time for the callback, asked (optionally) in the last step of the inquiry */
+export const CALLBACK_TIMES = [
+  { value: 'vormittag', label: 'Vormittags' },
+  { value: 'nachmittag', label: 'Nachmittags' },
+  { value: 'abend', label: 'Abends' },
+] as const
+export const isValidCallbackTime = (v: unknown): v is string => CALLBACK_TIMES.some((c) => c.value === v)
+
+/** Steps of the inquiry wizard in order – stored as leads.form_step (how far an incomplete lead got) */
+export const FORM_STEPS = [
+  { value: 'kontakt', label: 'Kontakt' },
+  { value: 'kategorie', label: 'Investitionsgut' },
+  { value: 'iab', label: 'IAB & Frist' },
+  { value: 'budget', label: 'Budget' },
+  { value: 'zeitpunkt', label: 'Zeitpunkt' },
+  { value: 'abschluss', label: 'Abschluss' },
+] as const
+export type FormStep = (typeof FORM_STEPS)[number]['value']
+export const isFormStep = (v: unknown): v is FormStep => FORM_STEPS.some((s) => s.value === v)
+
 /** Landowner inquiry (/solarpark-flaeche-verpachten) */
 export const LAND_TYPES = [
   { value: 'acker', label: 'Ackerland' },

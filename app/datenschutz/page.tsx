@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CONSENT_CALL_TEXT, CONSENT_SHARE_TEXT, CONSENT_VERSION, LAND_SHARE_TEXT, offerShareText } from '@/lib/consent'
+import { CONSENT_CALL_TEXT, CONSENT_SHARE_TEXT, CONSENT_VERSION, LAND_SHARE_TEXT, SHARE_LABEL } from '@/lib/consent'
 
 export const metadata: Metadata = { title: 'Datenschutz', robots: { index: false } }
 
@@ -46,14 +46,13 @@ export default function DatenschutzPage() {
           <h2 className="font-bold text-slate-900">3. Weitergabe an Anbieter</h2>
           <p>
             Nur mit Ihrer ausdrücklichen Einwilligung und nach Bestätigung Ihrer E-Mail-Adresse geben wir Ihre Angaben an Anbieter weiter. Bei
-            einer allgemeinen Anfrage sind das ausgewählte Anbieter der von Ihnen gewählten Kategorien, bei der Anfrage zu einem konkreten
-            Projekt nur dessen Anbieter, bei Flächenangeboten ausgewählte Solarpark-Projektierer. Für die Vermittlung erhalten wir von den
+            einer Anfrage sind das ausgewählte Anbieter passender Projekte der von Ihnen gewählten Kategorien, auch wenn Sie über ein konkretes
+            Projekt angefragt haben, bei Flächenangeboten ausgewählte Solarpark-Projektierer. Für die Vermittlung erhalten wir von den
             Anbietern eine Vergütung. Der Wortlaut der Einwilligungen (Version {CONSENT_VERSION}) lautet:
           </p>
+          <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{SHARE_LABEL}</blockquote>
+          <p className="mt-2">Ausführlich bedeutet das:</p>
           <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{CONSENT_SHARE_TEXT}</blockquote>
-          <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">
-            {offerShareText('[Name des Angebots]', '[Kategorie]')}
-          </blockquote>
           <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{LAND_SHARE_TEXT}</blockquote>
           <p className="mt-2">Für Rückrufe holen wir eine gesonderte Einwilligung ein:</p>
           <blockquote className="mt-2 border-l-4 border-emerald-500 bg-white px-4 py-3 text-sm italic">{CONSENT_CALL_TEXT}</blockquote>

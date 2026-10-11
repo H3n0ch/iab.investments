@@ -6,7 +6,8 @@
 import { useState, useTransition } from 'react'
 import { addLeadActivity, deleteLead, updateLeadCRM, updateLeadStatus } from '@/lib/actions/admin'
 import { formatEuro, GOALS } from '@/lib/categories'
-import { AMOUNTS, BUDGETS, investTimings, LAND_TYPES, LEGAL_FORMS } from '@/lib/iab'
+import { AMOUNTS, BUDGETS, CALLBACK_TIMES, investTimings, LAND_TYPES, LEGAL_FORMS } from '@/lib/iab'
+import { leadScore, SCORE_BADGES } from '@/lib/lead-score'
 import type { Lead, LeadActivity, LeadStatus } from '@/lib/supabase/types'
 
 const PAGE_SIZE = 25
@@ -29,11 +30,15 @@ const SOURCE_BADGES: Record<string, { label: string; color: string }> = {
   angebot: { label: '🎯 Angebotsanfrage', color: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
   ratgeber: { label: 'Ratgeber', color: 'border-teal-200 bg-teal-50 text-teal-700' },
   flaeche: { label: '🌾 Fläche', color: 'border-lime-300 bg-lime-50 text-lime-800' },
+  ergebnis: { label: '💾 Gespeichert', color: 'border-slate-300 bg-slate-50 text-slate-600' },
 }
 
-type DoiFilter = '' | 'bestaetigt' | 'offen'
+type DoiFilter = '' | 'bestaetigt' | 'offen' | 'unvollstaendig'
+type SortMode = 'neu' | 'score'
 /** Leads from the inquiry forms carry a DOI token; registrations, contact and calculator leads don't need one */
 const needsDoi = (l: Lead) => l.consent_share
+/** Wizard lead that stopped before the last step: may be called about the own inquiry, not sold */
+const incomplete = (l: Lead) => Boolean(l.form_step) && !l.completed_at
 const doiOk = (l: Lead) => Boolean(l.doi_confirmed_at)
 
 const CHANNELS = [
@@ -116,6 +121,7 @@ export function LeadsCRM({
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LeadStatus | ''>('')
   const [doiFilter, setDoiFilter] = useState<DoiFilter>('')
+  const [sort, setSort] = useState<SortMode>('neu')
   const [visible, setVisible] = useState(PAGE_SIZE)
 
   const filtered = leads.filter((l) => {
@@ -123,6 +129,7 @@ export function LeadsCRM({
     // „Verkaufbar“ = consent to share + confirmed e-mail
     if (doiFilter === 'bestaetigt' && !(needsDoi(l) && doiOk(l))) return false
     if (doiFilter === 'offen' && !(needsDoi(l) && !doiOk(l))) return false
+    if (doiFilter === 'unvollstaendig' && !incomplete(l)) return false
     if (search) {
       const s = search.toLowerCase()
       return (
@@ -136,7 +143,9 @@ export function LeadsCRM({
     return true
   })
 
-  const shown = filtered.slice(0, visible)
+  // „Heiß zuerst“: who to call first (deadline, budget, timing), newest within the same rating
+  const ordered = sort === 'score' ? [...filtered].sort((a, b) => SCORE_BADGES[leadScore(a)].rank - SCORE_BADGES[leadScore(b)].rank) : filtered
+  const shown = ordered.slice(0, visible)
   const remaining = filtered.length - visible
   const selected = leads.find((l) => l.id === selectedId) ?? null
   const selectedActivities = activities.filter((a) => a.lead_id === selectedId)
@@ -195,6 +204,15 @@ export function LeadsCRM({
               <option value="">Alle (Double-Opt-in)</option>
               <option value="bestaetigt">✓ Bestätigt = verkaufbar</option>
               <option value="offen">Bestätigung offen</option>
+              <option value="unvollstaendig">⏳ Ohne Weitergabe (anrufen)</option>
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortMode)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs outline-none"
+            >
+              <option value="neu">Neueste zuerst</option>
+              <option value="score">🔥 Heiß zuerst</option>
             </select>
           </div>
 
@@ -214,7 +232,13 @@ export function LeadsCRM({
                   >
                     <p className="truncate text-xs font-semibold text-slate-800">{l.name}</p>
                     <p className="truncate text-[10px] text-slate-500">{catNames(l).join(', ') || '–'}</p>
-                    <div className="mt-1 flex items-center gap-1">
+                    <div className="mt-1 flex flex-wrap items-center gap-1">
+                      <span className={`rounded-full px-1.5 py-px text-[9px] font-semibold ${SCORE_BADGES[leadScore(l)].color}`}>{SCORE_BADGES[leadScore(l)].label}</span>
+                      {incomplete(l) && (
+                        <span className="rounded-full border border-amber-300 bg-amber-50 px-1.5 py-px text-[9px] font-medium text-amber-800" title="Anfrage ohne Weitergabe-Einwilligung: anrufen, nicht verkaufen">
+                          ⏳ ohne Weitergabe
+                        </span>
+                      )}
                       {st && <span className={`rounded-full border px-1.5 py-px text-[9px] font-medium ${st.color}`}>{st.label}</span>}
                       {l.source && SOURCE_BADGES[l.source] && (
                         <span className={`rounded-full border px-1.5 py-px text-[9px] font-medium ${SOURCE_BADGES[l.source].color}`}>
@@ -320,6 +344,8 @@ function LeadDetail({ lead, activities, views }: { lead: LeadRow; activities: Le
     ['Quelle', [SOURCE_BADGES[lead.source ?? '']?.label ?? lead.source, lead.landing_path, lead.utm_source].filter(Boolean).join(' · ') || null],
     ['Einwilligung', lead.consent_at ? `${fmtDateTime(lead.consent_at)} · ${lead.consent_text_version}` : null],
     ['Anruf', lead.consent_call ? 'Einwilligung erteilt' : 'keine Einwilligung'],
+    ['Rückruf am besten', CALLBACK_TIMES.find((c) => c.value === lead.callback_time)?.label ?? null],
+    ['Anfrage', incomplete(lead) ? 'ohne Weitergabe-Einwilligung' : lead.form_step ? 'mit Weitergabe-Einwilligung' : null],
     ['Double-Opt-in', needsDoi(lead) ? (lead.doi_confirmed_at ? `bestätigt ${fmtDateTime(lead.doi_confirmed_at)}` : 'noch nicht bestätigt – nicht weitergeben') : null],
   ]
 
@@ -380,7 +406,12 @@ function LeadDetail({ lead, activities, views }: { lead: LeadRow; activities: Le
             <p className="whitespace-pre-wrap text-sm text-slate-800">{lead.message}</p>
           </div>
         )}
-        {!lead.consent_share && (
+        {incomplete(lead) && (
+          <p className="border-b border-amber-100 bg-amber-50 px-5 py-2 text-xs font-medium text-amber-900">
+            ⏳ Anfrage ohne Weitergabe-Einwilligung – nicht verkaufen, nur zur eigenen Anfrage anrufen und im Gespräch die Einwilligung einholen.
+          </p>
+        )}
+        {!lead.consent_share && !incomplete(lead) && (
           <p className="border-b border-amber-100 bg-amber-50 px-5 py-2 text-xs text-amber-800">
             Keine Einwilligung zur Weitergabe an Anbieter. Erst weitergeben, wenn der Kontakt ein Angebot ausdrücklich anfragt.
           </p>

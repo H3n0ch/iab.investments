@@ -18,14 +18,17 @@ type LeadLite = {
   gclid: string | null
   consent_share: boolean
   doi_confirmed_at: string | null
+  form_step: string | null
+  completed_at: string | null
   lead_categories: { categories: { name: string } | null }[] | null
 }
 
 const SOURCE_GROUPS = [
-  { label: 'Angebotsanfragen', match: (s: string | null) => !['registrierung', 'kontakt', 'rechner', 'frist', 'ratgeber', 'flaeche'].includes(s ?? '') },
+  { label: 'Angebotsanfragen', match: (s: string | null) => !['registrierung', 'kontakt', 'rechner', 'frist', 'ratgeber', 'flaeche', 'ergebnis'].includes(s ?? '') },
   { label: '🔥 Frist-Leads', match: (s: string | null) => s === 'frist' },
   { label: 'Ratgeber-Anfragen', match: (s: string | null) => s === 'ratgeber' },
   { label: '🌾 Flächen-Leads', match: (s: string | null) => s === 'flaeche' },
+  { label: '💾 Gespeicherte Ergebnisse', match: (s: string | null) => s === 'ergebnis' },
   { label: 'Registrierungen', match: (s: string | null) => s === 'registrierung' },
   { label: 'Kontaktanfragen', match: (s: string | null) => s === 'kontakt' },
   { label: 'Rechner-Berichte', match: (s: string | null) => s === 'rechner' },
@@ -73,7 +76,7 @@ export default async function AdminDashboard() {
   const [leadsRes, usersRes, offersRes, providersRes, partnersRes, viewsRes] = await Promise.all([
     supabase
       .from('leads')
-      .select('id, name, source, status, follow_up_at, created_at, landing_path, utm_source, utm_medium, gclid, consent_share, doi_confirmed_at, lead_categories(categories(name))')
+      .select('id, name, source, status, follow_up_at, created_at, landing_path, utm_source, utm_medium, gclid, consent_share, doi_confirmed_at, form_step, completed_at, lead_categories(categories(name))')
       .order('created_at', { ascending: false })
       .limit(5000),
     supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -95,10 +98,17 @@ export default async function AdminDashboard() {
   const newLeads = leads.filter((l) => l.status === 'neu').length
   const lastWeek = leads.filter((l) => new Date(l.created_at).getTime() > week).length
 
+  // Inquiries without consent to pass on – callable about the own inquiry, not sellable
+  const isIncomplete = (l: LeadLite) => Boolean(l.form_step) && !l.completed_at
+  const incomplete7 = leads.filter((l) => isIncomplete(l) && new Date(l.created_at).getTime() > week).length
+  const form30 = leads.filter((l) => l.form_step && new Date(l.created_at).getTime() > month)
+  const shared30 = form30.filter((l) => l.completed_at).length
+
   const tiles = [
     { label: 'Neue Leads (unbearbeitet)', value: newLeads, color: newLeads ? 'text-blue-600' : 'text-slate-400', href: '/admin/leads' },
     { label: 'Wiedervorlagen fällig', value: dueFollowUps, color: dueFollowUps ? 'text-red-600' : 'text-slate-400', href: '/admin/leads' },
     { label: 'Leads letzte 7 Tage', value: lastWeek, color: 'text-emerald-600', href: '/admin/leads' },
+    { label: '⏳ Ohne Weitergabe (7 Tage) – anrufen', value: incomplete7, color: incomplete7 ? 'text-amber-600' : 'text-slate-400', href: '/admin/leads' },
     { label: 'Registrierte Nutzer', value: usersRes.count ?? 0, color: 'text-slate-900', href: null },
     { label: 'Veröffentlichte Angebote', value: offersRes.count ?? 0, color: 'text-slate-900', href: '/admin/offers' },
     { label: 'Anbieter zu prüfen', value: providersRes.count ?? 0, color: providersRes.count ? 'text-amber-600' : 'text-slate-400', href: '/admin/anbieter' },
@@ -166,7 +176,7 @@ export default async function AdminDashboard() {
     <div className="mx-auto max-w-6xl space-y-6 p-6">
       <h1 className="text-lg font-bold text-slate-900">Übersicht</h1>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
         {tiles.map((t) => {
           const inner = (
             <>
@@ -185,6 +195,15 @@ export default async function AdminDashboard() {
           )
         })}
       </div>
+
+      <section className={`${card} flex flex-wrap items-baseline justify-between gap-2 px-5 py-3`}>
+        <h2 className="text-sm font-semibold text-slate-900">Anfrage-Formular (30 Tage)</h2>
+        <p className="text-sm text-slate-600">
+          {form30.length} Anfragen · <span className="font-semibold text-emerald-700">{shared30} mit Weitergabe</span> ·{' '}
+          <span className="font-semibold text-amber-600">{form30.length - shared30} ohne Weitergabe</span>
+          {form30.length ? ` (${Math.round((shared30 / form30.length) * 100)} % verkaufbar)` : ''}
+        </p>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className={card}>

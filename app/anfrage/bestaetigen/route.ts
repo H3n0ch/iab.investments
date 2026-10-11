@@ -18,11 +18,12 @@ export async function GET(request: NextRequest) {
       .from('leads')
       .update({ doi_confirmed_at: new Date().toISOString(), doi_token: null })
       .eq('doi_token', token)
-      .select('id, lead_type')
+      .select('id, lead_type, source')
       .maybeSingle()
     if (error) throw error
     if (!data) done.searchParams.set('status', 'ungueltig')
     else if (data.lead_type === 'flaeche') done.searchParams.set('typ', 'flaeche')
+    else if (data.source === 'ergebnis') done.searchParams.set('typ', 'erinnerung')
   } catch (e) {
     console.error('doi confirm failed', e)
     done.searchParams.set('status', 'fehler')

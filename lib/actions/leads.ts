@@ -3,24 +3,25 @@
 import { randomBytes } from 'node:crypto'
 import { cookies, headers } from 'next/headers'
 import { CATEGORIES, formatEuro } from '@/lib/categories'
-import { categoryShareText, CONSENT_VERSION, LAND_SHARE_TEXT, offerShareText } from '@/lib/consent'
+import { CONSENT_VERSION, LAND_SHARE_TEXT, SHARE_LABEL } from '@/lib/consent'
 import {
   amountBucket,
   BUDGETS,
+  CALLBACK_TIMES,
   formatDeadline,
   iabDeadline,
   iabYears,
   investTimings,
-  isValidBudget,
   isValidLegalForm,
   isValidTiming,
   LAND_TYPES,
   LEGAL_FORMS,
 } from '@/lib/iab'
 import { getCurrentUser } from '@/lib/auth'
-import { getPublicOffer } from '@/lib/offers'
+import { sanitizeStep, setLeadCategories, stepColumns } from '@/lib/lead-steps'
+import { getMarketSnapshot, getPublicOffer } from '@/lib/offers'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
-import { sendCalcReport, sendLeadAdminNotification, sendLeadDoi } from '@/lib/email'
+import { sendCalcReport, sendLeadAdminNotification, sendLeadDoi, sendLeadStarted, sendResultMail } from '@/lib/email'
 import { UNLOCK_COOKIE } from '@/lib/unlock'
 import { calcHint, computeCalc, eur, eur2, isTaxYear, reportRows, type CalcParams } from '@/lib/rechner'
 
@@ -46,7 +47,6 @@ async function unlockOffers() {
   })
 }
 
-const PHONE_ERROR = 'Bitte geben Sie Ihre Telefonnummer an, damit der Anbieter Sie zurückrufen kann.'
 const validPhone = (p: string | null) => (p ?? '').replace(/[^0-9]/g, '').length >= 6
 
 /** Tracking fields every inquiry form sends (landing path, campaign, Google Ads click id) */
@@ -60,57 +60,46 @@ function attribution(fd: FormData) {
   }
 }
 
+export type InquiryState = { ok: boolean; shared?: boolean; error?: string; fieldErrors?: Record<string, string> }
+
 /**
- * Inquiry wizard (all pages): category → IAB amount → deadline → budget → timing → contact + consents.
- * Every lead goes to iab.investments first; it only counts as sellable after the double opt-in.
- * With `offer_id` the consent names exactly this offer and its provider.
+ * Inquiry „Unterlagen & Kalkulation anfordern“ (2 pages: situation, then contact). Saved only now, on submit.
+ * With consent to pass the data on, the lead is complete (sellable after the double opt-in). Without it, it is
+ * stored as „ohne Weitergabe“: the visitor may be called about the own inquiry, but the lead is not sold.
+ * The same contact within 30 days is matched to the existing lead instead of creating a duplicate.
  */
-export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<LeadFormState> {
+export async function submitInquiry(fd: FormData): Promise<InquiryState> {
   // Honeypot + timing: pretend success so bots don't retry
   const renderedAt = Number(fd.get('_t') ?? 0)
-  if (str(fd, 'website') || (renderedAt && Date.now() - renderedAt < MIN_FILL_MS)) {
-    return { ok: true }
-  }
+  if (str(fd, 'website') || (renderedAt && Date.now() - renderedAt < MIN_FILL_MS)) return { ok: true, shared: true }
 
   const name = str(fd, 'name', 120)
   const email = str(fd, 'email', 200).toLowerCase()
-  const phone = str(fd, 'phone', 40) || null
-  const company = str(fd, 'company', 160) || null
-  const legalForm = str(fd, 'legal_form')
-  const iabRaw = str(fd, 'iab_amount_eur')
-  const iabEur = Math.min(Math.max(0, Math.floor(Number(iabRaw.replace(/[^0-9]/g, '')) || 0)), 200_000)
-  const yearRaw = Number(str(fd, 'iab_year'))
-  const budget = str(fd, 'budget')
-  const timing = str(fd, 'invest_timing')
+  const phone = str(fd, 'phone', 40).replace(/[^0-9+ ()/-]/g, '') || null
   const sourceRaw = str(fd, 'source')
   const offerRaw = str(fd, 'offer_id')
-  const slugs = fd.getAll('categories').map(String)
-  const consentPrivacy = fd.get('consent_privacy') === 'on'
-  const consentShare = fd.get('consent_share') === 'on'
-  const consentCall = fd.get('consent_call') === 'on'
+  const shared = fd.get('consent_share') === 'on'
 
-  const categories = CATEGORIES.filter((c) => slugs.includes(c.slug))
-  const offer = offerRaw && categories.length === 1 ? await getPublicOffer(categories[0].slug, offerRaw) : null
+  const raw: Record<string, unknown> = Object.fromEntries([...fd.entries()].filter(([k]) => k !== 'categories'))
+  const step = sanitizeStep({ ...raw, categories: fd.getAll('categories').map(String), form_step: shared ? 'abschluss' : 'kontakt' })
+  const categories = CATEGORIES.filter((c) => step.categories?.includes(c.slug))
 
   const fieldErrors: Record<string, string> = {}
-  if (categories.length === 0) fieldErrors.categories = 'Bitte wählen Sie mindestens eine Kategorie.'
-  if (iabRaw === '') fieldErrors.iab_amount_eur = 'Bitte geben Sie den IAB-Betrag an oder wählen Sie „Noch kein IAB“.'
-  if (!isValidBudget(budget)) fieldErrors.budget = 'Bitte wählen Sie Ihr Budget.'
-  if (!isValidTiming(timing)) fieldErrors.invest_timing = 'Bitte wählen Sie, wann Sie investieren möchten.'
+  if (categories.length === 0) fieldErrors.categories = 'Bitte wählen Sie mindestens ein Investitionsgut.'
+  if (!step.budget) fieldErrors.budget = 'Bitte wählen Sie Ihr Budget.'
   if (name.length < 2) fieldErrors.name = 'Bitte geben Sie Ihren Namen an.'
+  if (!validPhone(phone)) fieldErrors.phone = 'Bitte geben Sie Ihre Telefonnummer an, z. B. 0171 1234567.'
   if (!EMAIL_RE.test(email)) fieldErrors.email = 'Bitte geben Sie eine gültige E-Mail-Adresse an.'
-  if (!validPhone(phone)) fieldErrors.phone = PHONE_ERROR
-  if (!consentPrivacy) fieldErrors.consent_privacy = 'Bitte bestätigen Sie die Datenschutzerklärung.'
-  if (!consentShare) fieldErrors.consent_share = 'Ohne diese Einwilligung können wir Ihnen keine Projekte vermitteln.'
-  if (!consentCall) fieldErrors.consent_call = 'Wir und die Anbieter melden uns telefonisch. Bitte bestätigen Sie den Rückruf.'
-  if (offerRaw && !offer) return { ok: false, error: 'Dieses Projekt ist nicht mehr verfügbar.' }
+  if (fd.get('consent_call') !== 'on') fieldErrors.consent_call = 'Bitte bestätigen Sie, dass wir Sie zu Ihrer Anfrage anrufen dürfen.'
+  if (fd.get('consent_privacy') !== 'on') fieldErrors.consent_privacy = 'Bitte bestätigen Sie die Datenschutzerklärung.'
   if (Object.keys(fieldErrors).length) return { ok: false, fieldErrors }
 
-  const iabYear = iabEur > 0 && iabYears().includes(yearRaw) ? yearRaw : null
+  const offer = offerRaw && categories.length === 1 ? await getPublicOffer(categories[0].slug, offerRaw) : null
   const source = (SOURCES as readonly string[]).includes(sourceRaw) ? sourceRaw : 'landing'
-  const legal = isValidLegalForm(legalForm) ? legalForm : null
-  const shareText = offer ? offerShareText(offer.title, categories[0].name) : categoryShareText(categories.map((c) => c.name))
-  const token = randomBytes(24).toString('base64url')
+  // Exactly the sentence shown at the checkbox, plus what it referred to
+  const shareText = `${SHARE_LABEL} [Auswahl: ${offer ? `Projekt „${offer.title}“ (${categories[0].name})` : categories.map((c) => c.name).join(', ')}]`
+  const doiToken = shared ? randomBytes(24).toString('base64url') : null
+  const now = new Date().toISOString()
 
   const h = await headers()
   const user = await getCurrentUser()
@@ -119,87 +108,198 @@ export async function submitLead(_prev: LeadFormState, fd: FormData): Promise<Le
     supabase = getSupabaseAdmin()
   } catch (e) {
     console.error(e)
-    return { ok: false, error: 'Die Anfrage konnte gerade nicht gespeichert werden. Bitte versuchen Sie es später erneut.' }
+    return { ok: false, error: 'Ihre Anfrage konnte gerade nicht gespeichert werden. Bitte versuchen Sie es später erneut.' }
   }
 
-  const { data: cats, error: catErr } = await supabase
-    .from('categories')
-    .select('id, slug')
-    .in('slug', categories.map((c) => c.slug))
-  if (catErr) console.error('categories lookup failed', catErr)
+  const data = {
+    name,
+    email,
+    phone,
+    ...stepColumns(step),
+    consent_text_version: CONSENT_VERSION,
+    consent_privacy: true,
+    consent_call: true,
+    consent_share: shared,
+    // Exact wording – proof of consent when the lead is passed on
+    consent_share_text: shared ? shareText : null,
+    consent_at: now,
+    completed_at: shared ? now : null,
+    doi_token: doiToken,
+    notified_at: now,
+  }
+
+  // Same e-mail or phone within 30 days → update the existing lead (no duplicate for the buyers)
+  const since = new Date(Date.now() - 30 * 86400000).toISOString()
+  const { data: existing } = await supabase
+    .from('leads')
+    .select('id')
+    .eq('lead_type', 'investor')
+    .gte('created_at', since)
+    .or(phone ? `email.eq.${email},phone.eq."${phone}"` : `email.eq.${email}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  let leadId: string
+  if (existing) {
+    const { error } = await supabase.from('leads').update(data).eq('id', existing.id)
+    if (error) {
+      console.error('inquiry update failed', error)
+      return { ok: false, error: 'Ihre Anfrage konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.' }
+    }
+    leadId = existing.id
+    await supabase.from('lead_activities').insert({
+      lead_id: leadId,
+      admin_email: 'system',
+      channel: 'notiz',
+      outcome: 'interessiert',
+      notes: `Erneut angefragt über ${str(fd, 'landing_path', 300) || 'die Website'}`,
+    })
+  } else {
+    const { data: lead, error } = await supabase
+      .from('leads')
+      .insert({
+        ...data,
+        source,
+        offer_id: offer?.id ?? null,
+        ...attribution(fd),
+        user_agent: h.get('user-agent')?.slice(0, 300) ?? null,
+        user_id: user?.id ?? null,
+      })
+      .select('id')
+      .single()
+    if (error || !lead) {
+      console.error('inquiry insert failed', error)
+      return { ok: false, error: 'Ihre Anfrage konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.' }
+    }
+    leadId = lead.id
+  }
+  await setLeadCategories(leadId, categories.map((c) => c.slug))
+  await unlockOffers()
+
+  const iabEur = step.iab_amount_eur ?? 0
+  const facts: [string, string][] = []
+  if (offer) facts.push(['Projekt', offer.title])
+  facts.push(['IAB', iabEur > 0 ? formatEuro(iabEur) : 'noch kein IAB'])
+  if (step.iab_year) facts.push(['Frist', formatDeadline(step.iab_year)])
+  if (step.budget) facts.push(['Budget', BUDGETS.find((b) => b.value === step.budget)?.label ?? step.budget])
+  if (step.invest_timing) facts.push(['Zeitpunkt', investTimings().find((t) => t.value === step.invest_timing)?.label ?? step.invest_timing])
+  if (step.legal_form) facts.push(['Rechtsform', LEGAL_FORMS.find((f) => f.value === step.legal_form)?.label ?? step.legal_form])
+  if (step.callback_time) facts.push(['Rückruf', CALLBACK_TIMES.find((c) => c.value === step.callback_time)?.label ?? step.callback_time])
+  if (step.budget === 'gt200') facts.push(['Hinweis', 'Großes Ticket: Provisionspartner'])
+
+  const mails: Promise<unknown>[] = []
+  if (shared) {
+    const mail = {
+      id: leadId,
+      name,
+      email,
+      phone,
+      company: step.company || null,
+      amountLabel: iabEur > 0 ? formatEuro(iabEur) : 'noch kein IAB',
+      deadline: step.iab_year ? formatDeadline(step.iab_year) : null,
+      goalLabel: null,
+      categoryNames: categories.map((c) => c.name),
+      source,
+      extra: [...facts.filter(([k]) => k !== 'IAB' && k !== 'Frist'), ['Status', '✓ mit Weitergabe, Double-Opt-in ausstehend'], ['Telefon-Einwilligung', 'ja']] as [string, string][],
+    }
+    mails.push(sendLeadAdminNotification(mail), sendLeadDoi({ ...mail, token: doiToken! }))
+  } else {
+    // Speed to lead: callable right away, but without consent to pass it on – not to be sold
+    mails.push(
+      sendLeadStarted({
+        id: leadId,
+        name,
+        email,
+        phone,
+        resumed: Boolean(existing),
+        facts: [['Interesse', categories.map((c) => c.name).join(', ')], ...facts, ['Seite', str(fd, 'landing_path', 300) || '–']],
+      }),
+    )
+  }
+  // A failing mail must not lose the lead – it's already stored
+  await Promise.allSettled(mails).then((rs) => rs.forEach((r) => r.status === 'rejected' && console.error('inquiry mail failed', r.reason)))
+
+  return { ok: true, shared }
+}
+
+/** Personal summary in the last step: how many matching projects there are (own data, before the last consent) */
+export async function getInquirySummary(slugs: string[]): Promise<{ count: number; minEntry: number | null; fast: number }> {
+  const stats = (await getMarketSnapshot()).filter((s) => slugs.includes(s.slug))
+  const entries = stats.map((s) => s.minEntry).filter((x): x is number => x != null)
+  return {
+    count: stats.reduce((n, s) => n + s.count, 0),
+    minEntry: entries.length ? Math.min(...entries) : null,
+    fast: stats.reduce((n, s) => n + s.fastCount, 0),
+  }
+}
+
+/**
+ * „Ergebnis speichern & Frist-Erinnerung erhalten“ under a calculator result: a soft contact without password.
+ * Not sellable (consent_share = false) – it is the start of the deadline reminders and a later inquiry.
+ */
+export async function saveResult(_prev: LeadFormState, fd: FormData): Promise<LeadFormState> {
+  const renderedAt = Number(fd.get('_t') ?? 0)
+  if (str(fd, 'website') || (renderedAt && Date.now() - renderedAt < MIN_FILL_MS)) return { ok: true }
+
+  const email = str(fd, 'email', 200).toLowerCase()
+  const name = str(fd, 'name', 120)
+  const iabEur = Math.min(Math.max(0, Math.floor(Number(str(fd, 'iab_amount_eur')) || 0)), 200_000)
+  const yearRaw = Number(str(fd, 'iab_year'))
+  const reminder = fd.get('reminder') === 'on'
+  const summary = str(fd, 'summary', 600)
+  const page = str(fd, 'page', 200)
+
+  const fieldErrors: Record<string, string> = {}
+  if (!EMAIL_RE.test(email)) fieldErrors.email = 'Bitte geben Sie eine gültige E-Mail-Adresse an.'
+  if (fd.get('consent_privacy') !== 'on') fieldErrors.consent_privacy = 'Bitte bestätigen Sie die Datenschutzerklärung.'
+  if (Object.keys(fieldErrors).length) return { ok: false, fieldErrors }
+
+  const iabYear = iabYears().includes(yearRaw) ? yearRaw : null
+  const token = randomBytes(24).toString('base64url')
+  // Path of the calculator page only (no open redirect): the result link re-opens it pre-filled
+  const path = /^\/[a-z0-9/-]*$/.test(page) ? page : '/iab-aufloesen'
+  const resultUrl = `${path}?${new URLSearchParams({ ...(iabEur ? { iab: String(iabEur) } : {}), ...(iabYear ? { jahr: String(iabYear) } : {}) })}#rechner`
+
+  const h = await headers()
+  let supabase
+  try {
+    supabase = getSupabaseAdmin()
+  } catch (e) {
+    console.error(e)
+    return { ok: false, error: 'Das Ergebnis konnte gerade nicht gespeichert werden. Bitte versuchen Sie es später erneut.' }
+  }
 
   const { data: lead, error } = await supabase
     .from('leads')
     .insert({
-      name,
+      name: name || email.split('@')[0],
       email,
-      phone,
-      company,
-      legal_form: legal,
-      iab_amount_eur: iabEur,
+      source: 'ergebnis',
+      iab_amount_eur: iabEur || null,
       iab_amount: iabEur > 0 ? amountBucket(iabEur) : null,
       iab_year: iabYear,
       iab_deadline: iabYear ? iabDeadline(iabYear).toISOString().slice(0, 10) : null,
-      budget,
-      invest_timing: timing,
-      source,
-      offer_id: offer?.id ?? null,
+      message: [summary, `Frist-Erinnerung: ${reminder ? 'ja' : 'nein'}`].filter(Boolean).join('\n'),
       ...attribution(fd),
       user_agent: h.get('user-agent')?.slice(0, 300) ?? null,
       consent_text_version: CONSENT_VERSION,
       consent_privacy: true,
-      consent_share: true,
-      // Exact wording – proof of consent when the lead is passed on
-      consent_share_text: shareText,
-      consent_call: true,
+      consent_share: false,
       consent_at: new Date().toISOString(),
       doi_token: token,
-      user_id: user?.id ?? null,
     })
     .select('id')
     .single()
 
   if (error || !lead) {
-    console.error('lead insert failed', error)
-    return { ok: false, error: 'Die Anfrage konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.' }
+    console.error('save result insert failed', error)
+    return { ok: false, error: 'Das Ergebnis konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.' }
   }
 
-  if (cats?.length) {
-    const { error: lcErr } = await supabase
-      .from('lead_categories')
-      .insert(cats.map((c) => ({ lead_id: lead.id, category_id: c.id })))
-    if (lcErr) console.error('lead_categories insert failed', lcErr)
-  }
-
-  const budgetLabel = BUDGETS.find((b) => b.value === budget)!.label
-  const extra: [string, string][] = [
-    ['Budget', budgetLabel],
-    ['Zeitpunkt', investTimings().find((t) => t.value === timing)!.label],
-  ]
-  if (legal) extra.push(['Rechtsform', LEGAL_FORMS.find((f) => f.value === legal)!.label])
-  if (offer) extra.unshift(['Projekt', offer.title])
-  if (budget === 'gt200') extra.push(['Hinweis', 'Großes Ticket: Provisionspartner'])
-  extra.push(['Double-Opt-in', 'ausstehend'], ['Telefon-Einwilligung', 'ja'])
-
-  const mail = {
-    id: lead.id,
-    name,
-    email,
-    phone,
-    company,
-    amountLabel: iabEur > 0 ? formatEuro(iabEur) : 'noch kein IAB',
-    deadline: iabYear ? formatDeadline(iabYear) : null,
-    goalLabel: null,
-    categoryNames: categories.map((c) => c.name),
-    source,
-    extra,
-  }
-  await unlockOffers()
-  // A failing mail must not lose the lead – it's already stored
-  await Promise.allSettled([sendLeadAdminNotification(mail), sendLeadDoi({ ...mail, token })]).then((rs) =>
-    rs.forEach((r) => r.status === 'rejected' && console.error('lead mail failed', r.reason))
+  await sendResultMail({ email, name, summary, resultPath: resultUrl, deadline: iabYear ? formatDeadline(iabYear) : null, reminder, token }).catch((e) =>
+    console.error('result mail failed', e),
   )
-
   return { ok: true }
 }
 

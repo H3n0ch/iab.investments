@@ -10,6 +10,7 @@ import type { TaxYear } from '@/lib/tax'
 import { track } from '@/lib/track'
 import { LeadForm } from './LeadForm'
 import { OfferCard } from './OfferList'
+import { SaveResult } from './seo/SaveResult'
 
 // Frist-Check (deadline pages): tax year + IAB amount → deadline, cost of missing it, live countdown,
 // matching real projects, then the inquiry wizard pre-filled with amount and year.
@@ -18,7 +19,7 @@ const input =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
 const label = 'mb-1.5 block text-sm font-medium text-slate-700'
 const seg = (on: boolean) =>
-  `flex-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${on ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-white'}`
+  `flex-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${on ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-white'}`
 const euroIn = (v: string) => Number(v.replace(/[^\d]/g, '')) || 0
 const show = (n: number) => (n ? n.toLocaleString('de-DE') : '')
 /** Deadline leads are only offered categories with a lead buyer */
@@ -159,6 +160,12 @@ export function FristCheck({ defaultYear, offers }: { defaultYear: number; offer
                 <strong className="text-white">{eur(r.interest)} Zinsen</strong> ({r.months} Monate × 0,15 %).
               </p>
               <Countdown year={year} now={now} />
+              <SaveResult
+                key={`${iab}-${year}`}
+                iabAmount={iab}
+                year={year}
+                summary={`IAB ${eur(iab)} aus ${year}: investieren bis ${formatDeadline(year)}, mindestens ${eur(iab * 2)} netto. Bei Auflösung ca. ${eur(r.backTax)} Nachzahlung + ${eur(r.interest)} Zinsen.`}
+              />
               <p className="text-xs text-slate-400">
                 Maßgeblich ist die Lieferung bzw. Anschaffung bis zum Fristende, nicht die Bestellung. Rechenhilfe, keine Steuerberatung.
               </p>

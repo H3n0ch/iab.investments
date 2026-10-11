@@ -87,6 +87,12 @@ export type Lead = {
   gclid: string | null
   utm_medium: string | null
   utm_campaign: string | null
+  /** Inquiry wizard: null = started but not completed (only for wizard leads, see form_step) */
+  completed_at: string | null
+  /** Last step reached in the wizard; null for leads from other forms */
+  form_step: string | null
+  /** Preferred callback time: vormittag | nachmittag | abend */
+  callback_time: string | null
   status: LeadStatus
   notes: string | null
   follow_up_at: string | null

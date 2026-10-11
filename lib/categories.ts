@@ -135,7 +135,7 @@ export const CATEGORIES: Category[] = [
     name: 'Mobile Tiny Houses',
     short: 'Tiny Houses auf Rädern zur Vermietung an Feriengäste oder Arbeitskräfte',
     icon: '🏡',
-    minInvestment: 55000,
+    minInvestment: 75000,
     yieldProfile: 'Mieteinnahmen über Betreiber',
     effort: 'mittel',
     goals: ['rendite', 'eigennutzung'],
@@ -162,7 +162,7 @@ export const CATEGORIES: Category[] = [
       },
       {
         q: 'Ab welchem Betrag gibt es Tiny Houses als Investment?',
-        a: 'Mobile Tiny Houses für Vermietungsmodelle starten meist bei rund 55.000 € netto. Hochwertige Modelle für Glamping-Resorts liegen häufig zwischen 80.000 € und 120.000 €.',
+        a: 'Mobile Tiny Houses für Vermietungsmodelle starten meist bei rund 75.000 € netto. Hochwertige Modelle für Glamping-Resorts liegen häufig zwischen 80.000 € und 120.000 €.',
       },
       {
         q: 'Wie hoch ist die Rendite bei vermieteten Tiny Houses?',

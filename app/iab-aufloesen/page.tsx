@@ -1,36 +1,54 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { AufloesenRechner } from '@/components/AufloesenRechner'
 import { Faq } from '@/components/Faq'
 import { GuideCards } from '@/components/GuideCards'
-import { OfferCard } from '@/components/OfferList'
-import { TrustBlock } from '@/components/TrustBlock'
-import { getCategory } from '@/lib/categories'
+import { InquiryModal } from '@/components/InquiryModal'
+import { KeyFacts, QuickAnswer, Section, Sources, TextLink, Toc } from '@/components/seo/Blocks'
+import { CtaButton, TrustLine } from '@/components/seo/CtaCard'
+import { ProjectPreview } from '@/components/seo/ProjectPreview'
+import { ZinsTimeline } from '@/components/seo/ZinsTimeline'
+import { lapseCost } from '@/lib/aufloesen'
+import { CATEGORIES } from '@/lib/categories'
 import type { FaqItem } from '@/lib/faq'
-import { daysUntilDeadline, formatDeadline, fristPath, iabYears } from '@/lib/iab'
-import { getAllOffers } from '@/lib/offers'
+import { formatDeadline, fristPath, iabYears } from '@/lib/iab'
+import { eur, isTaxYear } from '@/lib/rechner'
+import { articleLd, breadcrumbLd, faqLd, ldJson } from '@/lib/seo'
 import { guidesBySlug } from '@/lib/wissen'
 
-// Landing page for the highest-intent cluster: "IAB auflösen", "IAB Frist abgelaufen", "IAB rückgängig machen",
-// "IAB Frist verlängern", "IAB auflösen Zinsen". /ratgeber/iab-frist stays the informational deadline page and links here.
+// Pilot of the guide template (SEO plan, section 2): the most valuable cluster.
+// iab auflösen 390 · KD 19 · CPC 1,96 $ | auflösung iab 320 · KD 13 | investitionsabzugsbetrag auflösen 260 · KD 22 |
+// auflösung investitionsabzugsbetrag 210 · KD 15 | iab auflösung 90 · KD 12 – all on this one page.
 
 export const revalidate = 300
 
+const PATH = '/iab-aufloesen'
+const UPDATED = 'Oktober 2026'
+const MODIFIED = '2026-10-11'
+const TITLE = 'IAB auflösen: Kosten & Zinsen berechnen'
+const DESCRIPTION =
+  'Auflösung des IAB: Was kostet es, wenn der Investitionsabzugsbetrag aufgelöst wird? Nachzahlung + 0,15 % Zinsen pro Monat berechnen, Frist prüfen, Auswege.'
+
 export const metadata: Metadata = {
-  title: 'IAB auflösen: Auflösung bei Anschaffung, Beispiel, Frist & Zinsen',
-  description:
-    'IAB auflösen: So funktioniert die Auflösung des Investitionsabzugsbetrags bei Anschaffung (mit Beispiel) und was bei Fristablauf passiert. Steuernachzahlung und Zinsen berechnen, Frist prüfen.',
-  alternates: { canonical: '/iab-aufloesen' },
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: PATH },
+  openGraph: { type: 'article', title: TITLE, description: DESCRIPTION },
 }
 
 const FAQ: FaqItem[] = [
   {
-    q: 'Was passiert, wenn ich den IAB nicht rechtzeitig investiere?',
-    a: 'Der IAB wird im Jahr seiner Bildung rückgängig gemacht. Das Finanzamt ändert den Steuerbescheid dieses Jahres, auch wenn er schon bestandskräftig ist. Die damals gesparte Steuer ist nachzuzahlen, zuzüglich Zinsen nach § 233a AO.',
+    q: 'Wann muss ich den IAB auflösen?',
+    a: 'Aufgelöst wird der IAB, wenn Sie nicht bis zum Ende des dritten Wirtschaftsjahres nach der Bildung investieren. Für einen IAB aus 2023 ist das der 31.12.2026, für 2024 der 31.12.2027. Sie müssen nichts aktiv tun: Das Finanzamt macht den Abzug rückgängig, sobald es davon erfährt.',
   },
   {
     q: 'Wie hoch sind die Zinsen, wenn der IAB aufgelöst wird?',
     a: '0,15 % pro vollem Monat auf die Einkommensteuer-Nachzahlung, also 1,8 % pro Jahr. Der Zinslauf beginnt 15 Monate nach Ende des Jahres, in dem der IAB gebildet wurde. Bei einem IAB aus 2023 laufen die Zinsen also ab April 2025.',
+  },
+  {
+    q: 'Muss ich die Auflösung dem Finanzamt melden?',
+    a: 'Ja. Bleibt die Investition aus, müssen Sie das spätestens mit der Steuererklärung des Jahres angeben, in dem die Frist endet. Ihr Steuerberater beantragt dann die Änderung des Bescheids für das Bildungsjahr.',
   },
   {
     q: 'Kann ich die IAB-Frist verlängern?',
@@ -38,11 +56,11 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'Kann ich einen IAB freiwillig auflösen?',
-    a: 'Ja. Wenn absehbar ist, dass keine Investition erfolgt, kann der IAB auch vor Fristende freiwillig rückgängig gemacht werden. Die Nachzahlung fällt trotzdem an. Weil der geänderte Bescheid früher kommt, laufen aber weniger Zinsmonate auf. Ob das sinnvoll ist, klären Sie mit Ihrem Steuerberater.',
+    a: 'Ja. Wenn absehbar ist, dass keine Investition erfolgt, kann der IAB auch vor Fristende freiwillig rückgängig gemacht werden. Die Nachzahlung fällt trotzdem an. Weil der geänderte Bescheid früher kommt, laufen aber weniger Zinsmonate auf.',
   },
   {
     q: 'Was passiert, wenn ich weniger investiere als geplant?',
-    a: 'Dann wird nur der nicht genutzte Teil des IAB rückgängig gemacht. Der IAB darf höchstens 50 % der Anschaffungskosten betragen. Wer den vollen IAB nutzen will, muss also mindestens das Doppelte netto investieren.',
+    a: 'Dann wird nur der nicht genutzte Teil des IAB aufgelöst. Der IAB darf höchstens 50 % der Anschaffungskosten betragen. Wer den vollen IAB nutzen will, muss also mindestens das Doppelte netto investieren.',
   },
   {
     q: 'Reicht es, vor Fristende zu bestellen?',
@@ -54,193 +72,235 @@ const FAQ: FaqItem[] = [
   },
 ]
 
-const link = 'font-medium text-emerald-700 underline underline-offset-2'
+const TOC = [
+  { id: 'bedeutung', label: 'Auflösung des IAB: was das bedeutet' },
+  { id: 'fristen', label: 'Wann der IAB aufgelöst wird: Fristen je Jahrgang' },
+  { id: 'kosten', label: 'Was die Auflösung kostet: Nachzahlung und Zinsen' },
+  { id: 'projekte', label: 'Projekte, die jetzt noch passen' },
+  { id: 'freiwillig', label: 'Investitionsabzugsbetrag freiwillig oder teilweise auflösen' },
+  { id: 'anschaffung', label: 'Auflösung bei Anschaffung' },
+  { id: 'auswege', label: 'Auflösung vermeiden: was bis Fristende lieferbar ist' },
+  { id: 'rechner', label: 'Ihre Kosten berechnen (Rechner)' },
+  { id: 'fragen', label: 'Häufige Fragen' },
+]
+
+const LIVE_SLUGS = CATEGORIES.filter((c) => !c.comingSoon).map((c) => c.slug)
 
 export default async function IabAufloesenPage() {
   const years = iabYears()
-  // Offers that can realistically be delivered before year end
-  const fast = (await getAllOffers())
-    .filter((o) => o.availability && /sofort|woche/i.test(o.availability))
-    .map((o) => ({ offer: o, category: getCategory(o.category_slug) }))
-    .filter((x): x is { offer: typeof x.offer; category: NonNullable<typeof x.category> } => Boolean(x.category && !x.category.comingSoon))
-    .slice(0, 3)
+  const urgent = years[0]
+  // Worked example from our own tax engine – always the current most urgent vintage
+  const exampleYear = isTaxYear(urgent) ? urgent : 2023
+  const ex = lapseCost({ iab: 50000, zvE: 120000, year: exampleYear, joint: false, church: 0 })
+
+  const jsonLd = [
+    articleLd({ title: TITLE, description: DESCRIPTION, path: PATH, modified: MODIFIED }),
+    breadcrumbLd([
+      { name: 'Start', path: '/' },
+      { name: 'IAB auflösen', path: PATH },
+    ]),
+    faqLd(FAQ),
+  ]
 
   return (
     <>
-      <section className="hero-under-header bg-linear-to-br from-hero to-hero-2">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      {jsonLd.map((d, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(d) }} />
+      ))}
+
+      {/* ── Hero: H1, direct answer, one button ── */}
+      <section className="hero-under-header relative overflow-hidden bg-hero">
+        {/* Same photo as the inquiry modal – mobile: full width under the navy overlay, md+: right half fading into the navy */}
+        <div aria-hidden className="absolute inset-y-0 right-0 left-0 md:left-1/2">
+          <Image src="/images/anfrage.jpg" alt="" fill loading="eager" fetchPriority="high" sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" style={{ objectPosition: 'center 72%' }} />
+          <div className="absolute inset-0 bg-hero/85 md:bg-transparent md:bg-linear-to-r md:from-hero md:via-hero/50 md:to-hero/10" />
+        </div>
+        <div className="relative mx-auto max-w-6xl px-4 py-8 sm:py-12">
           <nav className="text-xs text-slate-400">
             <Link href="/" className="hover:text-white">Start</Link> / IAB auflösen
           </nav>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">IAB auflösen: bei Anschaffung oder bei Fristablauf</h1>
-          <p className="mt-3 max-w-3xl text-slate-300">
-            Läuft die Frist ab, wird der Investitionsabzugsbetrag rückwirkend aufgelöst: Steuernachzahlung plus 0,15 % Zinsen pro Monat.
-            Berechnen Sie, was das kostet, und wie viel Zeit Ihnen noch bleibt. Alle Beträge netto.
-          </p>
-
-          {/* Countdown for the running vintages, most urgent first */}
-          <div className="mb-8 mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {years.map((y, i) => {
-              const d = daysUntilDeadline(y)
-              return (
-                <Link
-                  key={y}
-                  href={fristPath(y)}
-                  className={`rounded-xl px-3 py-2.5 ring-1 transition-colors hover:bg-white/10 ${i === 0 ? 'bg-amber-400/15 ring-amber-400/40' : 'bg-white/5 ring-white/10'}`}
-                >
-                  <p className="text-xs text-slate-400">IAB aus {y}</p>
-                  <p className={`text-sm font-bold ${i === 0 ? 'text-amber-300' : 'text-white'}`}>bis {formatDeadline(y)}</p>
-                  <p className="text-xs text-slate-400">{d > 0 ? `noch ${d} Tage` : 'abgelaufen'}</p>
-                </Link>
-              )
-            })}
+          <h1 className="mt-4 max-w-4xl text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            IAB auflösen: Was die Auflösung kostet und wie Sie sie vermeiden
+          </h1>
+          <div className="mt-4">
+            <QuickAnswer updated={UPDATED}>
+              Wird ein Investitionsabzugsbetrag nicht bis zum Ende des dritten Folgejahres investiert, kommt es zur{' '}
+              <strong className="text-white">Auflösung des IAB</strong>: Das Finanzamt macht den Abzug im Jahr der Bildung rückgängig. Sie zahlen
+              die gesparte Steuer nach, plus <strong className="text-white">0,15 % Zinsen pro Monat</strong>. Für einen IAB aus {urgent} endet die
+              Frist am <strong className="text-amber-300">{formatDeadline(urgent)}</strong>.
+            </QuickAnswer>
           </div>
-
-          <AufloesenRechner />
+          <div className="mt-6">
+            <CtaButton where="hero" />
+            <div className="mt-2">
+              <TrustLine dark />
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl space-y-12 px-4 py-12 leading-relaxed text-slate-700">
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Was „IAB auflösen“ bedeutet</h2>
-          <p className="mt-3">
-            Ein Investitionsabzugsbetrag ist ein Versprechen an das Finanzamt: Sie dürfen bis zu 50 % einer geplanten Investition vorab vom
-            Gewinn abziehen, müssen aber bis zum Ende des dritten Folgejahres tatsächlich investieren. Bleibt die Investition aus, wird der
-            Abzug <strong>im Jahr seiner Bildung rückgängig gemacht</strong> (§ 7g Abs. 3 EStG). Das Finanzamt ändert dafür den damaligen
-            Steuerbescheid, auch wenn er längst bestandskräftig ist.
-          </p>
-          <p className="mt-3">
-            „IAB auflösen“ wird für zwei verschiedene Dinge benutzt: die <strong>Auflösung bei Anschaffung</strong>, wenn Sie wie geplant investieren
-            (der IAB wird dem Gewinn hinzugerechnet und mit den Anschaffungskosten verrechnet), und die <strong>Rückgängigmachung</strong>, wenn die
-            Investition ausbleibt.
-          </p>
-          <p className="mt-3">
-            Im zweiten Fall fällt der Steuervorteil weg, und weil die Steuer rückwirkend fällig wird, kommen Zinsen hinzu. Bis wann Ihre Frist
-            läuft, zeigen die Seiten zum <Link href={fristPath(2023)} className={link}>IAB 2023</Link> und{' '}
-            <Link href={fristPath(2024)} className={link}>IAB 2024</Link> sowie die Tabelle im Ratgeber{' '}
-            <Link href="/ratgeber/iab-frist" className={link}>IAB-Frist</Link>.
-          </p>
-        </section>
+      {/* ── Content (element budget: key facts, text, one graphic, project preview, folded tool, FAQ, sources) ── */}
+      <div className="mx-auto max-w-3xl space-y-10 px-4 py-12 leading-relaxed text-slate-700">
+        <KeyFacts
+          items={[
+            <>Frist: Ende des <strong>dritten Wirtschaftsjahres</strong> nach der Bildung, für den IAB {urgent} also der {formatDeadline(urgent)}.</>,
+            <>Kosten der Auflösung: Steuernachzahlung im Bildungsjahr plus <strong>0,15 % Zinsen pro Monat</strong> (1,8 % pro Jahr).</>,
+            <>Die Zinsen laufen <strong>rückwirkend</strong> ab dem 1. April des zweiten Jahres nach der Bildung.</>,
+            <>Vermeiden: bis Fristende ein bewegliches Wirtschaftsgut für <strong>mindestens das Doppelte des IAB</strong> anschaffen. Es zählt die Lieferung.</>,
+            <>Teilweise investiert? Dann wird nur der ungenutzte Rest aufgelöst. Freiwillig auflösen ist jederzeit möglich.</>,
+          ]}
+        />
 
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Auflösung des IAB bei Anschaffung: Beispiel</h2>
-          <p className="mt-3">
-            Investieren Sie fristgerecht, wird der IAB im Jahr der Anschaffung dem Gewinn <strong>hinzugerechnet</strong> (§ 7g Abs. 2 EStG),
-            höchstens 50 % der Anschaffungskosten. Gleichzeitig dürfen Sie die Anschaffungskosten um denselben Betrag mindern. Beides hebt sich auf.
-            Zusätzlich ist auf die geminderten Kosten eine <Link href="/ratgeber/sonderabschreibung-7g" className={link}>Sonderabschreibung von 40 %</Link>{' '}
-            möglich.
+        <Toc items={TOC} />
+
+        <Section id="bedeutung" title="Auflösung des IAB: was das bedeutet">
+          <p>
+            Ein Investitionsabzugsbetrag ist ein Versprechen an das Finanzamt: Sie ziehen bis zu 50 % einer geplanten Investition vorab vom Gewinn ab
+            und investieren innerhalb von drei Jahren. Bleibt die Investition aus, wird der Abzug <strong>im Jahr seiner Bildung rückgängig gemacht</strong>{' '}
+            (§ 7g Abs. 3 EStG). Umgangssprachlich heißt das „IAB auflösen“ oder „Investitionsabzugsbetrag auflösen“.
           </p>
-          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+          <p>
+            Mit „Auflösung Investitionsabzugsbetrag“ ist manchmal auch etwas anderes gemeint: die <strong>Hinzurechnung bei Anschaffung</strong>, wenn Sie
+            wie geplant investieren. Dann wird der IAB gewinnerhöhend hinzugerechnet und mit den Anschaffungskosten verrechnet, ganz ohne Nachzahlung.
+            Diesen Fall erklärt der Abschnitt <a href="#anschaffung" className="font-medium text-emerald-700 underline underline-offset-2">Auflösung bei Anschaffung</a>.
+          </p>
+        </Section>
+
+        <Section id="fristen" title="Wann der IAB aufgelöst wird: Fristen je Jahrgang">
+          <p>Die Frist endet mit dem dritten Wirtschaftsjahr nach der Bildung. Bei kalendergleichem Wirtschaftsjahr gilt:</p>
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <table className="w-full text-sm">
-              <tbody>
-                {[
-                  ['2023: IAB gebildet', '− 50.000 € Gewinn'],
-                  ['2026: PV-Module gekauft', '100.000 € netto'],
-                  ['2026: Hinzurechnung des IAB', '+ 50.000 € Gewinn'],
-                  ['2026: Minderung der Anschaffungskosten', '− 50.000 € Gewinn'],
-                  ['2026: Sonder-AfA 40 % auf 50.000 €', '− 20.000 € Gewinn'],
-                  ['Ab 2026: lineare AfA auf 50.000 €', 'über die Nutzungsdauer'],
-                ].map(([k, v]) => (
-                  <tr key={k} className="border-b border-slate-100 last:border-0">
-                    <td className="bg-slate-50 px-4 py-2.5 text-slate-600">{k}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-slate-900">{v}</td>
+              <thead className="bg-slate-50 text-left text-slate-500">
+                <tr>
+                  <th className="px-4 py-2.5 font-medium">IAB gebildet für</th>
+                  <th className="px-4 py-2.5 font-medium">investieren bis</th>
+                  <th className="px-4 py-2.5 font-medium">Zinsen bei Auflösung ab</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {years.map((y) => (
+                  <tr key={y}>
+                    <td className="px-4 py-2.5">
+                      <Link href={fristPath(y)} className="font-medium text-emerald-700 underline underline-offset-2">Wirtschaftsjahr {y}</Link>
+                    </td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-900">{formatDeadline(y)}</td>
+                    <td className="px-4 py-2.5">01.04.{y + 2}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="mt-3">
-            Ergebnis: Der IAB hat 2023 den Gewinn um 50.000 € gesenkt, und 2026 sinkt er durch die Sonder-AfA um weitere 20.000 €. Gebucht wird die
-            Hinzurechnung außerbilanziell, die Minderung der Anschaffungskosten über die Abschreibung. Die Details klären Sie mit Ihrem Steuerberater.
-          </p>
-        </section>
+          <p className="text-sm text-slate-500">Quelle: § 7g Abs. 3 EStG, § 233a AO. Bei abweichendem Wirtschaftsjahr verschieben sich die Daten.</p>
+        </Section>
 
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Was die Auflösung kostet</h2>
-          <p className="mt-3">
-            Zur Steuernachzahlung kommen Zinsen nach § 233a AO von <strong>0,15 % pro vollem Monat</strong>. Das Besondere beim IAB: Der
-            Zinslauf beginnt nicht erst mit der Auflösung, sondern schon 15 Monate nach Ende des Jahres, in dem der IAB gebildet wurde.
+        <Section id="kosten" title="Was die Auflösung kostet: Nachzahlung und Zinsen">
+          <p>
+            Zur Steuernachzahlung kommen Zinsen nach § 233a AO von <strong>0,15 % pro vollem Monat</strong>. Das Besondere beim IAB: Der Zinslauf beginnt
+            nicht erst mit der Auflösung, sondern schon 15 Monate nach Ende des Bildungsjahres.
           </p>
-          <p className="mt-3">
-            <strong>Beispiel:</strong> Ein Unternehmer hat für 2023 einen IAB von 50.000 € gebildet, bei 120.000 € zu versteuerndem
-            Einkommen. Investiert er nicht bis zum 31.12.2026, zahlt er rund 23.000 € Steuern nach. Die Zinsen laufen ab April 2025. Kommt der
-            geänderte Bescheid Mitte 2027, sind das 27 Monate, also weitere rund 850 €. Ihre eigenen Zahlen rechnen Sie oben im Rechner.
+          <ZinsTimeline year={exampleYear} />
+          <p>
+            <strong>Beispiel {exampleYear}:</strong> Ein Unternehmer bildet für {exampleYear} einen IAB von 50.000 € bei 120.000 € zu versteuerndem
+            Einkommen (Einzelveranlagung). Investiert er nicht bis {formatDeadline(exampleYear)}, zahlt er <strong>{eur(ex.backTax)}</strong> Steuern
+            nach. Kommt der geänderte Bescheid etwa ein halbes Jahr nach Fristende, sind das {ex.months} Zinsmonate, also weitere{' '}
+            <strong>{eur(ex.interest)}</strong>. Zusammen <strong>{eur(ex.total)}</strong>. Mit Ihren eigenen Zahlen rechnet der{' '}
+            <a href="#rechner" className="font-medium text-emerald-700 underline underline-offset-2">Rechner weiter unten</a>.
           </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Kann man die Frist verlängern?</h2>
-          <p className="mt-3">
-            Nein. Während der Corona-Pandemie hatte der Gesetzgeber die Frist für IAB aus den Jahren 2017 bis 2019 ausnahmsweise verlängert.
-            Diese Sonderregeln sind ausgelaufen. Für alle heute laufenden IAB gilt die reguläre Frist bis zum Ende des dritten Folgejahres,
-            ohne Möglichkeit einer Verlängerung.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Freiwillig auflösen oder teilweise investieren</h2>
-          <p className="mt-3">
-            Steht fest, dass keine Investition mehr kommt, können Sie den IAB auch <strong>vor Fristende freiwillig rückgängig machen</strong>.
-            Die Nachzahlung bleibt gleich, aber weil der geänderte Bescheid früher kommt, laufen weniger Zinsmonate auf.
-          </p>
-          <p className="mt-3">
-            Investieren Sie weniger als geplant, wird nur der ungenutzte Teil aufgelöst. Weil der IAB höchstens 50 % der Anschaffungskosten
-            betragen darf, deckt eine Investition von 60.000 € netto zum Beispiel einen IAB von 30.000 €. Ob eine Teilinvestition oder die
-            freiwillige Auflösung für Sie günstiger ist, klären Sie mit Ihrem Steuerberater.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Auswege bei knapper Zeit</h2>
-          <p className="mt-3">
-            Der IAB ist nicht an das ursprünglich geplante Wirtschaftsgut gebunden. Sie können ihn für jedes{' '}
-            <Link href="/ratgeber/bewegliche-wirtschaftsgueter" className={link}>bewegliche Wirtschaftsgut</Link> verwenden, das bis Fristende
-            angeschafft und im Anschaffungs- und Folgejahr zu mindestens 90 % betrieblich genutzt oder vermietet wird. Auch{' '}
-            <Link href="/ratgeber/iab-direktinvestment-betreibermodell" className={link}>Betreibermodelle</Link> kommen infrage.
-          </p>
-          <p className="mt-3">
-            Entscheidend ist die <strong>Lieferung</strong>, nicht die Bestellung. Schnell umsetzbar sind oft{' '}
-            <Link href="/photovoltaik-iab" className={link}>PV-Modulpakete in Solarparks</Link>,{' '}
-            <Link href="/batteriespeicher-iab" className={link}>Batteriespeicher</Link> und sofort verfügbare{' '}
-            <Link href="/tiny-house-iab" className={link}>Tiny Houses</Link>. Was Sie vor dem Jahresende prüfen sollten, zeigt die{' '}
-            <Link href="/ratgeber/iab-checkliste-jahresende" className={link}>IAB-Checkliste</Link>.
-          </p>
-        </section>
+        </Section>
       </div>
 
-      {fast.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 pb-12">
-          <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900">Schnell verfügbare Projekte</h2>
-              <p className="mt-1 text-slate-500">Sofort oder in wenigen Wochen lieferbar. Alle Preise netto.</p>
-            </div>
-            <Link href="/angebote" className="font-semibold text-emerald-700 hover:underline">Alle Projekte →</Link>
-          </div>
-          <div className="space-y-4">
-            {fast.map(({ offer, category }) => (
-              <OfferCard key={offer.id} offer={offer} category={category} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Project preview: the call to action in the text */}
+      <div className="mx-auto max-w-6xl px-4 pb-12">
+        <ProjectPreview slugs={LIVE_SLUGS} title="Auflösung vermeiden: Projekte, die jetzt noch passen" />
+      </div>
 
-      <div className="mx-auto max-w-3xl space-y-12 px-4 pb-12">
-        <section>
-          <h2 className="mb-5 text-2xl font-bold tracking-tight text-slate-900">Häufige Fragen zur IAB-Auflösung</h2>
+      <div className="mx-auto max-w-3xl space-y-10 px-4 pb-12 leading-relaxed text-slate-700">
+        <Section id="freiwillig" title="Investitionsabzugsbetrag freiwillig oder teilweise auflösen">
+          <p>
+            Steht fest, dass keine Investition mehr kommt, können Sie den IAB <strong>vor Fristende freiwillig auflösen</strong>. Die Nachzahlung bleibt
+            gleich. Weil der geänderte Bescheid früher kommt, laufen aber weniger Zinsmonate auf.
+          </p>
+          <p>
+            Investieren Sie weniger als geplant, wird nur der ungenutzte Teil aufgelöst. Weil der IAB höchstens 50 % der Anschaffungskosten betragen darf,
+            deckt eine Investition von 60.000 € netto zum Beispiel einen IAB von 30.000 €. Ob eine Teilinvestition oder die freiwillige Auflösung
+            günstiger ist, klären Sie mit Ihrem Steuerberater.
+          </p>
+          <p>
+            <strong>Frist verlängern geht nicht.</strong> Die Corona-Sonderregeln galten nur für IAB aus 2017 bis 2019 und sind ausgelaufen.
+          </p>
+        </Section>
+
+        <Section id="anschaffung" title="Auflösung bei Anschaffung">
+          <p>
+            Investieren Sie fristgerecht, wird der IAB im Jahr der Anschaffung dem Gewinn <strong>hinzugerechnet</strong> (§ 7g Abs. 2 EStG), höchstens 50 %
+            der Anschaffungskosten. Gleichzeitig mindern Sie die Anschaffungskosten um denselben Betrag. Beides hebt sich auf. Auf die geminderten
+            Kosten ist zusätzlich eine <TextLink href="/ratgeber/sonderabschreibung-7g">Sonderabschreibung von 40 %</TextLink> möglich. Beispiel: Bei
+            100.000 € Investition und 50.000 € IAB bleiben 50.000 € Anschaffungskosten, davon 20.000 € Sonder-AfA im ersten Jahr.
+          </p>
+        </Section>
+
+        <Section id="auswege" title="Auflösung vermeiden: was bis Fristende lieferbar ist">
+          <p>
+            Der IAB ist nicht an das ursprünglich geplante Wirtschaftsgut gebunden. Sie können ihn für jedes{' '}
+            <TextLink href="/ratgeber/bewegliche-wirtschaftsgueter">bewegliche Wirtschaftsgut</TextLink> verwenden, das bis Fristende angeschafft und im
+            Anschaffungs- und Folgejahr zu mindestens 90 % betrieblich genutzt oder vermietet wird, auch in{' '}
+            <TextLink href="/ratgeber/iab-direktinvestment-betreibermodell">Betreibermodellen</TextLink>.
+          </p>
+          <p>
+            Entscheidend ist die <strong>Lieferung</strong>, nicht die Bestellung. Kurzfristig umsetzbar sind oft{' '}
+            <TextLink href="/photovoltaik-iab">PV-Modulpakete in Solarparks</TextLink>, <TextLink href="/batteriespeicher-iab">Batteriespeicher</TextLink>{' '}
+            und sofort verfügbare <TextLink href="/tiny-house-iab">Tiny Houses</TextLink>.
+          </p>
+        </Section>
+      </div>
+
+      {/* Optional calculator: folded, offered below the explanation instead of dominating the top of the page */}
+      <div className="mx-auto max-w-6xl px-4 pb-10">
+        <details id="rechner" className="group scroll-mt-28 rounded-2xl border border-slate-200 bg-white shadow-sm open:bg-linear-to-br open:from-hero open:to-hero-2">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6">
+            <span>
+              <span className="block text-lg font-bold text-slate-900 group-open:text-white">Ihre Kosten der Auflösung berechnen</span>
+              <span className="mt-0.5 block text-sm text-slate-500 group-open:text-slate-300">
+                Optional: mit Ihrem IAB-Betrag, Jahrgang und Einkommen. Steuernachzahlung und Zinsen auf den Euro.
+              </span>
+            </span>
+            <span className="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 group-open:border-white/30 group-open:text-white">
+              <span className="group-open:hidden">Rechner öffnen</span>
+              <span className="hidden group-open:inline">Schließen</span>
+            </span>
+          </summary>
+          <div className="px-5 pb-6 sm:px-6">
+            <AufloesenRechner />
+          </div>
+        </details>
+      </div>
+
+      <div className="mx-auto max-w-3xl space-y-10 px-4 pb-12">
+        <section id="fragen" className="scroll-mt-28">
+          <h2 className="mb-5 text-2xl font-bold tracking-tight text-slate-900">Häufige Fragen zur Auflösung des IAB</h2>
           <Faq items={FAQ} />
         </section>
-        <TrustBlock />
-        <p className="rounded-xl bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
-          Allgemeine Information, keine Steuerberatung. iab.investments stellt den Kontakt zu Anbietern beweglicher Wirtschaftsgüter her und
-          berät nicht zu konkreten Angeboten. Ob und wie Sie Ihren IAB verwenden oder auflösen, klären Sie bitte mit Ihrem Steuerberater.
-        </p>
+
+        <Sources
+          updated={UPDATED}
+          sources={[
+            { label: '§ 7g EStG – Investitionsabzugsbeträge (gesetze-im-internet.de)', url: 'https://www.gesetze-im-internet.de/estg/__7g.html' },
+            { label: '§ 233a AO – Verzinsung von Steuernachforderungen', url: 'https://www.gesetze-im-internet.de/ao_1977/__233a.html' },
+            { label: '§ 238 AO – Höhe und Berechnung der Zinsen', url: 'https://www.gesetze-im-internet.de/ao_1977/__238.html' },
+          ]}
+        />
+
       </div>
 
       <section className="mx-auto max-w-6xl px-4">
         <h2 className="mb-5 text-xl font-bold tracking-tight text-slate-900">Weiterlesen</h2>
-        <GuideCards guides={guidesBySlug(['iab-frist', 'iab-checkliste-jahresende', 'iab-voraussetzungen'])} />
+        <GuideCards guides={guidesBySlug(['iab-frist', 'iab-checkliste-jahresende', 'sonderabschreibung-7g'])} />
       </section>
+
+      <InquiryModal
+        title="Unterlagen & Kalkulation anfordern"
+        form={{ preselected: [], options: LIVE_SLUGS, source: 'frist', submitLabel: 'Unterlagen & Kalkulation anfordern' }}
+      />
     </>
   )
 }

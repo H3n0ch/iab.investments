@@ -5,6 +5,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SiteModal } from "@/components/SiteModal";
 import { FloatingContact } from "@/components/FloatingContact";
+import { InquiryModal } from "@/components/InquiryModal";
+import { CATEGORIES } from "@/lib/categories";
 import "./globals.css";
 
 // Figtree like PVA-Invest: modern, slightly rounded, reads well in data sheets
@@ -36,6 +38,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex-1 pt-(--header-h)">{children}</main>
         <Footer />
         <SiteModal />
+        {/* Opened by the header CTA on pages without their own inquiry modal */}
+        <InquiryModal
+          global
+          title="Unterlagen & Kalkulation anfordern"
+          form={{ preselected: [], options: CATEGORIES.filter((c) => !c.comingSoon).map((c) => c.slug), source: "landing", submitLabel: "Unterlagen & Kalkulation anfordern" }}
+        />
         <FloatingContact />
         {PLAUSIBLE_DOMAIN && (
           <>

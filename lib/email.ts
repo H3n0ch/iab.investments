@@ -72,6 +72,7 @@ const SOURCE_LABELS: Record<string, string> = {
   angebot: 'Angebotsanfrage',
   ratgeber: 'Ratgeber-Anfrage',
   flaeche: 'Flächen-Lead (Solarpark-Pacht)',
+  ergebnis: 'Gespeichertes Ergebnis (weicher Kontakt)',
 }
 
 export async function sendLeadAdminNotification(lead: LeadMailData) {
@@ -102,6 +103,35 @@ export async function sendLeadAdminNotification(lead: LeadMailData) {
   })
 }
 
+/**
+ * Speed to lead for an inquiry without consent to pass the data on: callable about the own inquiry, not sellable.
+ * Call soon – ideally the consent is given in that call.
+ */
+export async function sendLeadStarted(l: { id: string; name: string; email: string; phone: string | null; resumed: boolean; facts: [string, string][] }) {
+  const resend = getResend()
+  if (!resend) return
+  const tel = l.phone ? l.phone.replace(/[^0-9+]/g, '') : null
+  await resend.emails.send({
+    from: FROM,
+    to: [ADMIN_TO],
+    replyTo: l.email,
+    subject: `📞 ${l.resumed ? 'Erneut angefragt' : 'Neuer Kontakt'} (ohne Weitergabe): ${l.name}${l.phone ? ` · ${l.phone}` : ''}`,
+    html: layout(`
+      <p style="color:#d97706;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin:0 0 6px;">Jetzt anrufen · ohne Weitergabe-Einwilligung</p>
+      <h1 style="color:#0f172a;font-size:20px;margin:0 0 16px;line-height:1.3;">${esc(l.name)}</h1>
+      ${tel ? `<a href="tel:${tel}" style="display:inline-block;background:#7bb831;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:15px;font-weight:700;margin:0 0 16px;">📞 ${esc(l.phone!)} anrufen</a>` : ''}
+      <table style="width:100%;border-collapse:collapse;">
+        ${row('E-Mail', esc(l.email))}
+        ${l.facts.map(([k, v]) => row(esc(k), esc(v))).join('')}
+      </table>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:16px 0 0;">
+        Der Kontakt hat dem Rückruf zugestimmt, aber nicht der Weitergabe an Anbieter. Nicht weiterverkaufen – im Gespräch die Einwilligung einholen.
+      </p>
+      <a href="${APP_URL}/admin/leads?id=${l.id}" style="display:inline-block;margin-top:16px;color:#4f7a1e;font-weight:600;font-size:14px;">Im CRM öffnen →</a>
+    `),
+  })
+}
+
 /** Double opt-in: the lead is only passed on after the link is clicked */
 export async function sendLeadDoi(lead: LeadMailData & { token: string }) {
   const resend = getResend()
@@ -127,6 +157,44 @@ export async function sendLeadDoi(lead: LeadMailData & { token: string }) {
       </table>
       <p style="color:#64748b;font-size:12px;line-height:1.6;margin:20px 0 0;">
         Sie haben nichts angefragt? Dann ignorieren Sie diese E-Mail, wir geben keine Daten weiter. Für Sie ist unser Service kostenlos, wir werden von den Anbietern vergütet. Wir beraten nicht in Steuerfragen; ob ein Wirtschaftsgut für Ihren IAB geeignet ist, klären Sie bitte mit Ihrem Steuerberater. Ihre Einwilligung können Sie jederzeit per Antwort auf diese E-Mail widerrufen.
+      </p>
+    `),
+  })
+}
+
+/** Saved calculator result: the numbers, a link back to the pre-filled calculator, the confirmation link for reminders */
+export async function sendResultMail(r: {
+  email: string
+  name: string
+  summary: string
+  resultPath: string
+  deadline: string | null
+  reminder: boolean
+  token: string
+}) {
+  const resend = getResend()
+  if (!resend) return
+  const confirm = `${APP_URL}/anfrage/bestaetigen?token=${encodeURIComponent(r.token)}`
+  await resend.emails.send({
+    from: FROM,
+    to: [r.email],
+    replyTo: ADMIN_TO,
+    subject: r.deadline ? `Ihr IAB-Ergebnis · Frist ${r.deadline}` : 'Ihr gespeichertes IAB-Ergebnis',
+    html: layout(`
+      <h1 style="color:#0f172a;font-size:20px;margin:0 0 12px;line-height:1.3;">${r.name ? `Hallo ${esc(r.name.split(' ')[0])}, hier` : 'Hier'} ist Ihr Ergebnis</h1>
+      ${r.summary ? `<p style="background:#f1f5f9;border-radius:8px;padding:12px 16px;color:#0f172a;font-size:14px;line-height:1.6;margin:0 0 16px;">${esc(r.summary).replace(/\n/g, '<br>')}</p>` : ''}
+      <a href="${APP_URL}${r.resultPath}" style="display:inline-block;color:#4f7a1e;font-weight:600;font-size:14px;margin:0 0 20px;">Ergebnis wieder öffnen →</a>
+      ${
+        r.reminder
+          ? `<p style="color:#334155;font-size:14px;line-height:1.6;margin:0 0 12px;">Damit wir Sie vor Fristende erinnern dürfen, bestätigen Sie bitte Ihre E-Mail-Adresse:</p>
+      <a href="${confirm}" style="display:inline-block;background:#7bb831;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:700;">Erinnerung bestätigen</a>`
+          : ''
+      }
+      <p style="color:#334155;font-size:14px;line-height:1.6;margin:20px 0 0;">
+        Sie möchten die Auflösung vermeiden? <a href="${APP_URL}/angebote" style="color:#4f7a1e;font-weight:600;">Aktuelle Projekte ansehen</a> und Unterlagen anfordern, kostenlos und ohne Passwort.
+      </p>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:16px 0 0;">
+        Rechenhilfe, keine Steuerberatung. Wir geben Ihre Adresse nicht an Anbieter weiter. Sie können sich jederzeit per Antwort auf diese E-Mail abmelden.
       </p>
     `),
   })

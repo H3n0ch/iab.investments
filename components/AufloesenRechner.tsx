@@ -1,18 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ASSESSMENT_DELAY_MONTHS, INTEREST_PER_MONTH, lapseCost } from '@/lib/aufloesen'
-import { CATEGORIES } from '@/lib/categories'
 import { daysUntilDeadline, formatDeadline, iabYears } from '@/lib/iab'
 import { eur, eur2, isTaxYear } from '@/lib/rechner'
 import type { TaxYear } from '@/lib/tax'
-import { LeadForm } from './LeadForm'
+import { track } from '@/lib/track'
+import { CtaButton, TrustLine } from './seo/CtaCard'
+import { SaveResult } from './seo/SaveResult'
 
 const input =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base text-slate-900 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600'
 const label = 'mb-1.5 block text-sm font-medium text-slate-700'
 const seg = (on: boolean) =>
-  `flex-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${on ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-white'}`
+  `flex-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${on ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-white'}`
 
 function euroIn(v: string): number {
   const n = Number(v.replace(/[^\d]/g, ''))
@@ -20,9 +21,6 @@ function euroIn(v: string): number {
 }
 const show = (n: number) => (n ? n.toLocaleString('de-DE') : '')
 const date = (d: Date) => d.toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' })
-
-/** Deadline leads are only offered categories with a lead buyer */
-const LIVE_SLUGS = CATEGORIES.filter((c) => !c.comingSoon).map((c) => c.slug)
 
 export function AufloesenRechner() {
   // Running vintages that have a tax tariff, most urgent (oldest) first
@@ -32,6 +30,34 @@ export function AufloesenRechner() {
   const [zvE, setZvE] = useState(120000)
   const [joint, setJoint] = useState(false)
   const [church, setChurch] = useState<0 | 8 | 9>(0)
+  const used = useRef(false)
+
+  // Link from the „Ergebnis speichern“ e-mail: ?iab=…&jahr=…#rechner restores the values and opens the folded calculator
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const iabParam = Number(p.get('iab'))
+    const yearParam = Number(p.get('jahr'))
+    if (iabParam > 0 || yearParam) {
+      queueMicrotask(() => {
+        if (iabParam > 0) setIab(Math.min(iabParam, 200000))
+        const y = years.find((x) => x === yearParam)
+        if (y) setYear(y)
+      })
+    }
+    if (window.location.hash === '#rechner') {
+      const d = document.getElementById('rechner')
+      if (d instanceof HTMLDetailsElement) {
+        d.open = true
+        d.scrollIntoView()
+      }
+    }
+  }, [years])
+  // First interaction = the entry question was answered (funnel step „Einstiegsfrage“)
+  const touch = () => {
+    if (used.current) return
+    used.current = true
+    track('Rechner genutzt', { rechner: 'aufloesen' })
+  }
 
   const r = lapseCost({ iab, zvE, year, joint, church })
   const days = daysUntilDeadline(year)
@@ -39,43 +65,68 @@ export function AufloesenRechner() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
-      {/* ── Inputs ── */}
+      {/* ── Inputs: the entry question first, details folded away ── */}
       <div className="space-y-5 self-start rounded-2xl bg-white p-5 shadow-2xl shadow-slate-950/30 sm:p-6">
+        <label className="block">
+          <span className="mb-2 block text-lg font-bold text-slate-900">Wie hoch ist Ihr IAB?</span>
+          <div className="relative">
+            <input
+              inputMode="numeric"
+              value={show(iab)}
+              onChange={(e) => {
+                setIab(Math.min(euroIn(e.target.value), 200000))
+                touch()
+              }}
+              className={`${input} pr-8 text-xl font-semibold`}
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">€</span>
+          </div>
+        </label>
         <div>
-          <span className={label}>IAB gebildet für Wirtschaftsjahr</span>
+          <span className={label}>Gebildet für Wirtschaftsjahr</span>
           <div className="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1">
             {years.map((y) => (
-              <button key={y} type="button" onClick={() => setYear(y)} className={seg(year === y)}>
+              <button
+                key={y}
+                type="button"
+                onClick={() => {
+                  setYear(y)
+                  touch()
+                }}
+                className={seg(year === y)}
+              >
                 {y}
               </button>
             ))}
           </div>
         </div>
-        <label className="block">
-          <span className={label}>Höhe des IAB (€)</span>
-          <input inputMode="numeric" value={show(iab)} onChange={(e) => setIab(Math.min(euroIn(e.target.value), 200000))} className={input} />
-        </label>
-        <label className="block">
-          <span className={label}>Zu versteuerndes Einkommen im Jahr {year} ohne IAB (€)</span>
-          <input inputMode="numeric" value={show(zvE)} onChange={(e) => setZvE(euroIn(e.target.value))} className={input} />
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <span className={label}>Veranlagung</span>
-            <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
-              <button type="button" onClick={() => setJoint(false)} className={seg(!joint)}>Einzel</button>
-              <button type="button" onClick={() => setJoint(true)} className={seg(joint)}>Splitting</button>
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium text-slate-600">Genauer rechnen (Einkommen, Splitting, Kirchensteuer)</summary>
+          <div className="mt-3 space-y-4">
+            <label className="block">
+              <span className={label}>Zu versteuerndes Einkommen {year} ohne IAB (€)</span>
+              <input inputMode="numeric" value={show(zvE)} onChange={(e) => setZvE(euroIn(e.target.value))} className={input} />
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className={label}>Veranlagung</span>
+                <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
+                  <button type="button" onClick={() => setJoint(false)} className={seg(!joint)}>Einzel</button>
+                  <button type="button" onClick={() => setJoint(true)} className={seg(joint)}>Splitting</button>
+                </div>
+              </div>
+              <label className="block">
+                <span className={label}>Kirchensteuer</span>
+                <select value={church} onChange={(e) => setChurch(Number(e.target.value) as 0 | 8 | 9)} className={input}>
+                  <option value={0}>keine</option>
+                  <option value={8}>8 %</option>
+                  <option value={9}>9 %</option>
+                </select>
+              </label>
             </div>
+            <p className="text-xs text-slate-500">Ohne Angabe: 120.000 € Einkommen, Einzelveranlagung, keine Kirchensteuer.</p>
           </div>
-          <label className="block">
-            <span className={label}>Kirchensteuer</span>
-            <select value={church} onChange={(e) => setChurch(Number(e.target.value) as 0 | 8 | 9)} className={input}>
-              <option value={0}>keine</option>
-              <option value={8}>8 %</option>
-              <option value={9}>9 %</option>
-            </select>
-          </label>
-        </div>
+        </details>
       </div>
 
       {/* ── Result ── */}
@@ -92,6 +143,24 @@ export function AufloesenRechner() {
               'Die Frist ist abgelaufen.'
             )}
           </p>
+          {/* The result always ends in the one primary action, pre-filled with what was just entered */}
+          <div className="mt-5 border-t border-white/10 pt-5">
+            <p className="text-sm font-semibold text-white">
+              Lieber investieren: passende Projekte + Kalkulation für {eur(iab)} IAB, lieferbar bis {formatDeadline(year)}
+            </p>
+            <CtaButton prefill={iab > 0 ? { iabAmount: iab, year } : undefined} where="rechner-ergebnis" className="mt-3 w-full sm:w-auto" />
+            <div className="mt-2">
+              <TrustLine dark />
+            </div>
+            <div className="mt-4">
+              <SaveResult
+                key={`${iab}-${year}`}
+                iabAmount={iab}
+                year={year}
+                summary={`IAB ${eur(iab)} aus ${year}, Frist ${formatDeadline(year)}. Bei Auflösung ca. ${eur(r.total)} (Nachzahlung ${eur(r.backTax)} + Zinsen ${eur(r.interest)}).`}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -144,22 +213,6 @@ export function AufloesenRechner() {
           </details>
         </div>
 
-        <div id="anfrage" className="scroll-mt-20 rounded-2xl border-2 border-emerald-500 bg-white p-5 shadow-sm sm:p-6">
-          <p className="text-lg font-bold text-slate-900">Frist retten: Unterlagen & Kalkulation anfordern</p>
-          <p className="mb-4 mt-1 text-sm text-slate-500">
-            Wir senden Ihnen Projekte, die bis {formatDeadline(year)} lieferbar sind, und melden uns persönlich. Entscheidend ist die Lieferung,
-            nicht die Bestellung.
-          </p>
-          <LeadForm
-            key={`${year}-${iab}`}
-            preselected={[]}
-            options={LIVE_SLUGS}
-            source="frist"
-            iabAmount={iab > 0 ? iab : undefined}
-            year={iab > 0 ? year : undefined}
-            submitLabel="Frist retten: Unterlagen anfordern"
-          />
-        </div>
       </div>
     </div>
   )

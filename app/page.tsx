@@ -31,7 +31,7 @@ export default async function Home() {
     <>
       {/* Hero: full-height photos, header floating on top, slogan, glass subline, search */}
       {/* No overflow-hidden on the section: the search dropdowns must be able to extend below the hero */}
-      <section className="hero-under-header relative z-10 flex min-h-svh flex-col bg-slate-900">
+      <section className="hero-under-header relative z-10 flex min-h-svh flex-col bg-slate-800">
         {/* One full-bleed photo, no colour filter – only a light neutral shade at the top (header) and behind the text */}
         <div aria-hidden className="absolute inset-0 overflow-hidden">
           <Image
@@ -130,7 +130,7 @@ export default async function Home() {
 
       {/* Deadline explainer */}
       <section className="mx-auto max-w-6xl px-4 py-14">
-        <div className="grid gap-8 rounded-3xl bg-slate-900 p-6 text-white sm:p-10 lg:grid-cols-2">
+        <div className="grid gap-8 rounded-3xl bg-slate-800 p-6 text-white sm:p-10 lg:grid-cols-2">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">Die IAB-Frist kurz erklärt</h2>
             <p className="mt-3 text-slate-300">

@@ -8,7 +8,6 @@ import { DeadlineBanner } from '@/components/DeadlineBanner'
 import { LockButton } from '@/components/offer/LockButton'
 import { OfferGallery } from '@/components/offer/OfferGallery'
 import { InquiryModal } from '@/components/InquiryModal'
-import { LeadForm } from '@/components/LeadForm'
 import { Datasheet } from '@/components/offer/Datasheet'
 import { UnlockBox } from '@/components/offer/UnlockBox'
 import { getCurrentUser } from '@/lib/auth'
@@ -225,25 +224,19 @@ export default async function OfferDetailPage({ params, searchParams }: PageProp
       {/* Inquiry as a modal – opened by every link to #anfrage (sidebar, locked values, sticky CTA) */}
       <InquiryModal
         title="Unterlagen & Kalkulation anfordern"
-        subtitle={
-          unlocked
-            ? 'Wir melden uns persönlich und stellen den Kontakt zum Anbieter her, kostenlos und unverbindlich.'
-            : 'Alle Werte sehen Sie sofort nach Ihrer Anfrage, ohne Passwort. Wir melden uns persönlich.'
-        }
-      >
-        <LeadForm
-          preselected={[c.slug]}
-          source="angebot"
-          offer={{ id: offer.id, title: offer.title, categorySlug: c.slug, categoryName: c.name }}
-          submitLabel="Unterlagen & Kalkulation anfordern"
-          defaults={{
+        form={{
+          preselected: [c.slug],
+          source: 'angebot',
+          offer: { id: offer.id, title: offer.title, categorySlug: c.slug, categoryName: c.name },
+          submitLabel: 'Unterlagen & Kalkulation anfordern',
+          defaults: {
             name: user?.profile?.full_name,
             email: user?.email,
             phone: user?.profile?.phone,
             company: user?.profile?.company,
-          }}
-        />
-      </InquiryModal>
+          },
+        }}
+      />
     </div>
   )
 }
