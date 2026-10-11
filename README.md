@@ -6,7 +6,7 @@ Wir qualifizieren ihn telefonisch und verkaufen ihn pro Lead oder bei großen Ti
 
 - **Zielgruppe:** Selbständige, Freiberufler, kleine GmbHs mit IAB-Frist oder Steuerlast vor Jahresende
 - **Kategorien live:** PV-Direktinvestment, Batteriespeicher, Mobile Tiny Houses
-- **„Bald verfügbar“** (Musterprojekt + Vormerken): Wohnmobile, Ladeinfrastruktur, Container, Werbeflächen, Bitcoin-Miner
+- **„Bald verfügbar“** (Musterprojekt + Vormerken): Ladeinfrastruktur, Container, Werbeflächen, Bitcoin-Miner
 - **Kein Marktplatz:** Anbieter bleiben unsichtbar. Den Kontakt stellen wir persönlich her. Der Marktplatz-Code bleibt erhalten, falls wir später umbauen.
 
 Technik: Next.js 16 (App Router), Supabase (Region Frankfurt), Resend (E-Mail), Tailwind 4, Plausible, Hosting Netlify.

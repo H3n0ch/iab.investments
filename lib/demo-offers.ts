@@ -36,10 +36,6 @@ const DEMO: Record<string, Demo[]> = {
     { title: 'ASIC-Miner-Paket mit Hosting in Deutschland', location: 'Deutschland', min: 10000, yield: 'Erträge in BTC, schwankend', availability: 'Lieferung in 4–6 Wochen', description: 'ASIC-Miner der aktuellen Generation, betrieben und gewartet in einem deutschen Rechenzentrum.' },
     { title: 'Miner-Vermietung an Rechenzentrumsbetreiber', location: 'Norwegen', country: 'NO', min: 25000, yield: 'Mietertrag lt. Anbieter', availability: 'Q1', description: 'Sie kaufen die Miner und vermieten sie an den Betreiber. Sie erhalten eine Miete statt schwankender Mining-Erträge.' },
   ],
-  'wohnmobil-iab': [
-    { title: 'Teilintegrierter Camper für Vermietflotte', location: 'Bayern', min: 65000, yield: 'Mieteinnahmen lt. Station', availability: 'Saison 2027', description: 'Neues Wohnmobil, Vermietung über eine Vermietstation mit Saisonauslastung.' },
-    { title: 'Campervan Kastenwagen', location: 'Schleswig-Holstein', min: 60000, yield: 'Mieteinnahmen lt. Station', availability: 'sofort verfügbar', description: 'Kompakter Campervan, sehr gefragt bei Kurzurlaubern.' },
-  ],
 }
 
 const SLUGS = Object.keys(DEMO)

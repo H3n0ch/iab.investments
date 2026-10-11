@@ -129,7 +129,7 @@ export const ARTICLES: Article[] = [
       'Welche Voraussetzungen gelten für den Investitionsabzugsbetrag? Gewinngrenze 200.000 €, betriebliche Nutzung von mindestens 90 %, Verbleib und Vermietung im Überblick.',
     teaser: 'Gewinngrenze, 90-%-Nutzung, Verbleibensfrist und Vermietung: alle Bedingungen, an denen ein IAB scheitern kann.',
     icon: '✅',
-    categories: ['wohnmobil-iab', 'tiny-house-iab', 'ladeinfrastruktur-iab'],
+    categories: ['tiny-house-iab', 'ladeinfrastruktur-iab'],
     related: ['investitionsabzugsbetrag', 'bewegliche-wirtschaftsgueter', 'iab-rechtsform-gmbh-freiberufler', 'iab-faq'],
     intro:
       'Ein IAB ist schnell gebildet, aber er ist an Bedingungen geknüpft, die über Jahre eingehalten werden müssen. Manche gelten im Jahr der Bildung, andere erst nach der Anschaffung. Wer eine davon verletzt, riskiert die rückwirkende Auflösung samt Zinsen. Dieser Artikel ordnet die Voraussetzungen zeitlich, damit Sie wissen, wann worauf zu achten ist.',
@@ -160,7 +160,7 @@ export const ARTICLES: Article[] = [
         h: 'Nutzung zu mindestens 90 % und Verbleib',
         p: [
           'Die wohl wichtigste Bedingung gilt nach der Anschaffung: Das Wirtschaftsgut muss im Jahr der Anschaffung und im darauffolgenden Wirtschaftsjahr **vermietet oder in einer inländischen Betriebsstätte des Betriebs ausschließlich oder fast ausschließlich betrieblich genutzt** werden. Fast ausschließlich bedeutet: Die private Nutzung darf höchstens 10 % betragen.',
-          'Bei Fahrzeugen ist diese Grenze besonders heikel. Ein Pkw, der auch privat gefahren wird, erreicht die 90 % oft nicht, und der Nachweis gelingt in der Regel nur mit einem ordnungsgemäßen Fahrtenbuch. Bei [Wohnmobilen](/wohnmobil-iab) ist eine eigene Urlaubsnutzung deshalb praktisch ausgeschlossen, wenn der IAB nicht gefährdet werden soll.',
+          'Bei Fahrzeugen ist diese Grenze besonders heikel. Ein Pkw, der auch privat gefahren wird, erreicht die 90 % oft nicht, und der Nachweis gelingt in der Regel nur mit einem ordnungsgemäßen Fahrtenbuch. Bei Wohnmobilen ist eine eigene Urlaubsnutzung deshalb praktisch ausgeschlossen, wenn der IAB nicht gefährdet werden soll.',
           'Für Standorte im Ausland, zum Beispiel bei Hardware in einem ausländischen Rechenzentrum, sollten Sie die Voraussetzungen besonders sorgfältig mit Ihrem Steuerberater prüfen.',
         ],
       },
@@ -382,7 +382,6 @@ export const ARTICLES: Article[] = [
       'photovoltaik-iab',
       'batteriespeicher-iab',
       'tiny-house-iab',
-      'wohnmobil-iab',
       'ladeinfrastruktur-iab',
       'mietcontainer-iab',
       'werbeflaechen-iab',
@@ -414,10 +413,10 @@ export const ARTICLES: Article[] = [
         ],
       },
       {
-        h: 'Tiny Houses, Container und Wohnmobile',
+        h: 'Tiny Houses und Container',
         p: [
           'Bei **Tiny Houses** kommt es auf die Bauweise an. Ein Tiny House auf einem zugelassenen Trailer oder auf Kufen, das ohne größeren Aufwand versetzt werden kann, ist beweglich. Ein Haus auf einem festen Fundament mit dauerhaftem Anschluss an Ver- und Entsorgung kann dagegen als Gebäude gelten. Achten Sie bei [Tiny Houses für den IAB](/tiny-house-iab) deshalb auf die Mobilität und auf eine entsprechende Dokumentation.',
-          '**Container** wie Büro-, Lager- oder Sanitärcontainer sind transportabel und in der Regel bewegliche Wirtschaftsgüter. Sie werden häufig über Vermietpools betrieben, siehe [Container und Modulräume](/mietcontainer-iab). **Wohnmobile** sind Fahrzeuge und damit klar beweglich. Hier liegt die Hürde nicht in der Abgrenzung, sondern in der 90-%-Nutzung, siehe [vermietete Wohnmobile](/wohnmobil-iab).',
+          '**Container** wie Büro-, Lager- oder Sanitärcontainer sind transportabel und in der Regel bewegliche Wirtschaftsgüter. Sie werden häufig über Vermietpools betrieben, siehe [Container und Modulräume](/mietcontainer-iab).',
         ],
       },
       {
@@ -548,7 +547,7 @@ export const ARTICLES: Article[] = [
       'Wie wirkt der Investitionsabzugsbetrag je nach Rechtsform? IAB in der GmbH, in Personengesellschaften, für Freiberufler und Einzelunternehmer, mit Hinweisen zu Gewerbesteuer und Abfärbung.',
     teaser: 'Einzelunternehmen, GbR, GmbH oder freier Beruf: wie stark der IAB wirkt und wo Fallstricke liegen.',
     icon: '🏢',
-    categories: ['wohnmobil-iab', 'ladeinfrastruktur-iab', 'mietcontainer-iab'],
+    categories: ['ladeinfrastruktur-iab', 'mietcontainer-iab'],
     related: ['iab-voraussetzungen', 'investitionsabzugsbetrag', 'iab-direktinvestment-betreibermodell', 'iab-faq'],
     intro:
       'Der IAB steht allen Betrieben mit Gewinneinkünften offen, unabhängig von der Rechtsform. Wie stark er wirkt und worauf Sie achten müssen, hängt aber sehr wohl davon ab, ob Sie als Einzelunternehmer, als Freiberufler, in einer Personengesellschaft oder über eine GmbH investieren.',
@@ -591,7 +590,7 @@ export const ARTICLES: Article[] = [
       {
         h: 'Welche Investition zu welcher Rechtsform passt',
         p: [
-          'Grundsätzlich gilt: Je näher die Investition am eigenen Betrieb liegt, desto einfacher ist sie steuerlich. Ein [Wohnmobil](/wohnmobil-iab) für eine Vermietstation, [Ladepunkte](/ladeinfrastruktur-iab) für Kunden und Mitarbeiter oder [Container](/mietcontainer-iab) als Lager oder Büro passen zu vielen Betrieben gut.',
+          'Grundsätzlich gilt: Je näher die Investition am eigenen Betrieb liegt, desto einfacher ist sie steuerlich. [Ladepunkte](/ladeinfrastruktur-iab) für Kunden und Mitarbeiter oder [Container](/mietcontainer-iab) als Lager oder Büro passen zu vielen Betrieben gut.',
           'Wenn keine Investition für den eigenen Betrieb ansteht, kommen Betreibermodelle infrage. Bei Freiberuflern und Personengesellschaften sollte die Wahl hier besonders sorgfältig mit dem Steuerberater abgestimmt werden. Mit dem [IAB-Rechner](/iab-rechner) sehen Sie in 30 Sekunden, welche Kategorien zu Ihrem Betrag passen.',
         ],
       },
@@ -621,7 +620,7 @@ export const ARTICLES: Article[] = [
       'Die IAB-Frist endet am 31.12.? Mit dieser Checkliste planen Sie Investition, Lieferung, Rechnung und Nachweise rechtzeitig und vermeiden Rückgängigmachung und Zinsen.',
     teaser: 'Schritt für Schritt zur rechtzeitigen Investition: Lieferzeiten, Anschaffungszeitpunkt, Rechnung und Nachweise.',
     icon: '📋',
-    categories: ['ladeinfrastruktur-iab', 'mietcontainer-iab', 'krypto-mining-hardware-iab', 'wohnmobil-iab'],
+    categories: ['ladeinfrastruktur-iab', 'mietcontainer-iab', 'krypto-mining-hardware-iab'],
     related: ['iab-frist', 'iab-direktinvestment-betreibermodell', 'degressive-afa-investitionsbooster', 'iab-voraussetzungen'],
     intro:
       'Jedes Jahr im Herbst stellen viele Unternehmer fest, dass ein IAB zum Jahresende ausläuft. Dann wird es oft hektisch. Mit dieser Checkliste gehen Sie Schritt für Schritt vor und vermeiden die typischen Fehler, die zur Rückgängigmachung des IAB führen.',
@@ -637,7 +636,7 @@ export const ARTICLES: Article[] = [
         h: '2. Passende Kategorie wählen',
         p: [
           'Überlegen Sie, ob eine Investition für den eigenen Betrieb ansteht. Das ist steuerlich meist die einfachste Lösung. Wenn nicht, kommen Wirtschaftsgüter infrage, die vermietet oder über einen Betreiber genutzt werden. Kurz vor Fristende zählen vor allem Lieferfähigkeit und ein klarer Anschaffungszeitpunkt.',
-          'Kurze Lieferzeiten gibt es oft bei [Ladeinfrastruktur](/ladeinfrastruktur-iab), [Containern](/mietcontainer-iab) und [Mining-Hardware](/krypto-mining-hardware-iab). Bei [Wohnmobilen](/wohnmobil-iab) hängt es davon ab, ob Fahrzeuge auf Lager sind. Einen Überblick nach Budget und Ziel gibt der [IAB-Rechner](/iab-rechner).',
+          'Kurze Lieferzeiten gibt es oft bei [Ladeinfrastruktur](/ladeinfrastruktur-iab), [Containern](/mietcontainer-iab) und [Mining-Hardware](/krypto-mining-hardware-iab). Einen Überblick nach Budget und Ziel gibt der [IAB-Rechner](/iab-rechner).',
         ],
       },
       {

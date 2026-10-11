@@ -4,6 +4,10 @@ import type { GatedOfferData, MarketOffer, OfferDocument, OfferFact, PublicOffer
 import { getAllDemoOffers, getDemoOffer, getDemoOffers } from '@/lib/demo-offers'
 import { personalKeys } from '@/lib/datasheets'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { CATEGORIES } from '@/lib/categories'
+
+/** Categories on the site – offers of removed categories (e.g. Wohnmobile) stay in the DB but never show */
+const SITE_SLUGS = CATEGORIES.map((c) => c.slug)
 
 // Local preview only: example offers until Supabase is configured. Never in production.
 export const useDemo = !isSupabaseConfigured && process.env.NODE_ENV === 'development'
@@ -13,7 +17,7 @@ const PUBLIC_COLUMNS =
 
 export async function getOffersForCategory(slug: string): Promise<PublicOffer[]> {
   if (useDemo) return getDemoOffers(slug)
-  if (!isSupabaseConfigured) return []
+  if (!isSupabaseConfigured || !SITE_SLUGS.includes(slug)) return []
   const supabase = createPublicClient()
   const { data: cat } = await supabase.from('categories').select('id').eq('slug', slug).maybeSingle()
   if (!cat) return []
@@ -34,6 +38,7 @@ export async function getAllOffers(): Promise<MarketOffer[]> {
     .from('offers')
     .select(`${PUBLIC_COLUMNS}, categories!inner(slug)`)
     .eq('is_published', true)
+    .in('categories.slug', SITE_SLUGS)
     .order('created_at', { ascending: false })
   return ((data ?? []) as unknown as (PublicOffer & { categories: { slug: string } })[]).map(({ categories, ...o }) => ({
     ...o,
@@ -44,7 +49,7 @@ export async function getAllOffers(): Promise<MarketOffer[]> {
 /** Public part of a single published offer (no account needed). */
 export async function getPublicOffer(slug: string, id: string): Promise<PublicOffer | null> {
   if (useDemo) return getDemoOffer(slug, id)
-  if (!isSupabaseConfigured || !/^[0-9a-f-]{36}$/i.test(id)) return null
+  if (!isSupabaseConfigured || !SITE_SLUGS.includes(slug) || !/^[0-9a-f-]{36}$/i.test(id)) return null
   const supabase = createPublicClient()
   const { data } = await supabase
     .from('offers')
@@ -149,6 +154,7 @@ export async function getMarketSnapshot(): Promise<MarketStat[]> {
       .from('offers')
       .select('min_investment_cents, availability, facts, categories!inner(slug)')
       .eq('is_published', true)
+      .in('categories.slug', SITE_SLUGS)
     rows = ((data ?? []) as unknown as (Omit<Row, 'slug'> & { categories: { slug: string } })[]).map((r) => ({ ...r, slug: r.categories.slug }))
   }
   const bySlug = new Map<string, Row[]>()
@@ -202,6 +208,6 @@ export async function getPreviewOffers({ slugs, limit = 3 }: { slugs: string[]; 
 /** Published offers for the sitemap */
 export async function getPublishedOfferPaths(): Promise<{ slug: string; id: string }[]> {
   if (!isSupabaseConfigured) return []
-  const { data } = await createPublicClient().from('offers').select('id, categories!inner(slug)').eq('is_published', true)
+  const { data } = await createPublicClient().from('offers').select('id, categories!inner(slug)').eq('is_published', true).in('categories.slug', SITE_SLUGS)
   return ((data ?? []) as unknown as { id: string; categories: { slug: string } }[]).map((r) => ({ slug: r.categories.slug, id: r.id }))
 }

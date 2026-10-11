@@ -175,49 +175,6 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
-    slug: 'wohnmobil-iab',
-    comingSoon: true,
-    sampleProject: {
-      title: 'Teilintegriertes Wohnmobil in einer Vermietflotte',
-      location: 'Musterbeispiel',
-      text: 'Sie kaufen ein neues Wohnmobil, eine Vermietstation nimmt es für mehrere Jahre in ihre Flotte auf. Buchung, Übergabe, Reinigung und Versicherung übernimmt die Station, die Mieteinnahmen werden geteilt.',
-      facts: [['Kaufpreis', 'ca. 75.000 € netto'], ['Möglicher IAB', 'bis 37.500 €'], ['Vermietung', 'über Vermietstation'], ['Nutzung', 'mind. 90 % betrieblich']],
-    },
-    name: 'Vermietete Wohnmobile',
-    short: 'Wohnmobile und Camper in professionellen Vermietflotten',
-    icon: '🚐',
-    minInvestment: 60000,
-    yieldProfile: 'Mieteinnahmen über Vermietstation',
-    effort: 'mittel',
-    goals: ['rendite', 'eigennutzung'],
-    gradient: 'from-orange-300 via-amber-300 to-yellow-300',
-    image: { src: '/images/categories/wohnmobil-iab-2.jpg', alt: 'Wohnmobil an einem See bei Sonnenuntergang', position: 'center 65%', source: 'vom Betreiber eingefügt – Quelle/Lizenz ergänzen' },
-    seoTitle: 'Wohnmobil mit IAB: vermietetes Wohnmobil als Investitionsgut',
-    seoDescription:
-      'Wohnmobile in Vermietflotten als Investitionsgut für Ihren IAB. Betreibermodelle vergleichen, kostenlos und unverbindlich.',
-    intro:
-      'Sie kaufen ein Wohnmobil, eine Vermietstation nimmt es in ihre Flotte auf und vermietet es an Urlauber. Die Mieteinnahmen werden nach einem vereinbarten Schlüssel geteilt.',
-    highlights: ['Starke Nachfrage in der Reisesaison', 'Vermietung über Stationen', 'Fahrzeug bleibt Ihr Eigentum'],
-    faq: [
-      {
-        q: 'Darf ich das Wohnmobil privat nutzen?',
-        a: 'Für den IAB muss das Wirtschaftsgut im Jahr der Anschaffung und im Folgejahr zu mindestens 90 % betrieblich genutzt werden. Private Nutzung ist daher stark eingeschränkt.',
-      },
-      {
-        q: 'Ist ein Wohnmobil für den IAB begünstigt?',
-        a: 'Ja, ein Wohnmobil ist ein bewegliches Wirtschaftsgut. Begünstigt ist es aber nur bei fast ausschließlich betrieblicher Nutzung von mindestens 90 %, etwa bei Vermietung über eine Vermietstation. Eine private Urlaubsnutzung ist praktisch ausgeschlossen.',
-      },
-      {
-        q: 'Was kostet ein Wohnmobil für die Vermietung?',
-        a: 'Kastenwagen und Campervans starten meist bei etwa 60.000 € netto, teilintegrierte und integrierte Wohnmobile liegen häufig bei 75.000 € bis 120.000 €.',
-      },
-      {
-        q: 'Wie werden die Mieteinnahmen aufgeteilt?',
-        a: 'Die Vermietstation übernimmt Buchung, Übergabe, Reinigung und meist die Versicherung. Die Mieteinnahmen werden nach einem vereinbarten Schlüssel geteilt. Prüfen Sie, wer Wartung, Schäden und Stillstandzeiten trägt.',
-      },
-    ],
-  },
-  {
     slug: 'ladeinfrastruktur-iab',
     comingSoon: true,
     sampleProject: {

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 const PROVIDER_FAQ: FaqItem[] = [
   {
     q: 'Welche Produkte passen zu iab.investments?',
-    a: 'Abnutzbare bewegliche Wirtschaftsgüter, die Unternehmer für ihren Investitionsabzugsbetrag nutzen können, zum Beispiel PV-Module, Batteriespeicher, Container, Tiny Houses, Ladeinfrastruktur, Wohnmobile, Werbeflächen oder Mining-Hardware. Gebäude, Grundstücke, Fondsbeteiligungen und Software passen nicht.',
+    a: 'Abnutzbare bewegliche Wirtschaftsgüter, die Unternehmer für ihren Investitionsabzugsbetrag nutzen können, zum Beispiel PV-Module, Batteriespeicher, Container, Tiny Houses, Ladeinfrastruktur, Werbeflächen oder Mining-Hardware. Gebäude, Grundstücke, Fondsbeteiligungen und Software passen nicht.',
   },
   {
     q: 'Was kostet die Vorstellung meines Produkts?',
